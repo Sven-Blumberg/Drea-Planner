@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Drea Planner 2026</title>
+<style>
+:root {
+  --bg: #1c1a19;
+  --bezel: #0e0d0c;
+  --paper: #fffdfb;
+  --paper-2: #fbf6f2;
+  --ink: #2a2624;
+  --muted: #8a7e7a;
+  --line: #ecd9d4;
+  --pink: #f4b7c4;
+  --pink-d: #e59aaa;
+  --pink-h: #f8c9d3;
+  --gold: #c4a36a;
+  --accent: #f4b7c4;
+  --tab: #f7c5d0;
+  --tab-ink: #5c3d44;
+  --shadow: rgba(40, 20, 20, .18);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: "Avenir Next", "Segoe UI", "Century Gothic", sans-serif;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #3a322e 0%, var(--bg) 55%);
+  color: var(--ink);
+  overflow: hidden;
+}
+button, a { font-family: inherit; }
+.ce:empty:before { content: attr(data-ph); color: #cbb8b4; }
+.ce, input.plain, textarea.plain {
+  outline: none; border: none; background: transparent;
+  font: inherit; color: inherit; width: 100%;
+}
+input.plain, textarea.plain { resize: none; }
+
+/* Device */
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.chrome {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 18px 4px; color: #e8ddd6; font-size: 12px; letter-spacing: .08em;
+}
+.chrome strong { font-weight: 600; color: #fff; letter-spacing: .16em; text-transform: uppercase; }
+.chrome .tools { display: flex; gap: 8px; }
+.chrome button {
+  background: transparent; color: #e8ddd6; border: 1px solid #5a4f4a;
+  border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 11px; letter-spacing: .06em;
+}
+.chrome button:hover { border-color: var(--pink); color: #fff; }
+
+.stage {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 16px 16px; height: 100%; min-height: 0;
+}
+.device {
+  width: min(1280px, 100%);
+  height: min(860px, calc(100vh - 52px));
+  background: var(--bezel);
+  border-radius: 28px;
+  padding: 14px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.45), inset 0 0 0 1px #2a2624;
+  display: flex; flex-direction: column;
+}
+.planner {
+  flex: 1; min-height: 0;
+  background: #e9e0d8;
+  border-radius: 14px;
+  display: grid;
+  grid-template-rows: 34px 1fr;
+  grid-template-columns: 22px 1fr 42px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Tabs */
+.top-tabs {
+  grid-column: 1 / -1;
+  display: flex; justify-content: center; gap: 6px;
+  padding: 6px 48px 0; background: #e9e0d8;
+}
+.tab {
+  border: none; cursor: pointer; font-size: 9px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 7px 10px 8px; border-radius: 8px 8px 0 0;
+  background: var(--tab); color: var(--tab-ink);
+  box-shadow: 0 -1px 0 rgba(255,255,255,.5) inset;
+}
+.tab.active { filter: brightness(.96); transform: translateY(1px); font-weight: 800; }
+.side-left, .side-right {
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 8px; gap: 4px; background: #e9e0d8;
+}
+.home-btn {
+  width: 18px; height: 22px; border: none; border-radius: 0 6px 6px 0;
+  background: var(--tab); cursor: pointer; color: var(--tab-ink); font-size: 11px;
+}
+.mtab {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  border: none; cursor: pointer;
+  font-size: 8px; font-weight: 800; letter-spacing: .12em;
+  padding: 8px 3px; border-radius: 6px 0 0 6px;
+  background: var(--tab); color: var(--tab-ink); width: 28px;
+}
+.mtab.year { background: #2a2624; color: #f8c9d3; }
+.mtab.active { width: 34px; filter: brightness(.93); }
+
+.spread {
+  display: grid;
+  grid-template-columns: 1fr 26px 1fr;
+  min-height: 0; background: var(--paper);
+  box-shadow: 0 8px 24px var(--shadow);
+  border-radius: 2px 0 0 2px;
+}
+.page {
+  overflow: auto; padding: 16px 18px 14px;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.03), transparent 18px),
+    var(--paper);
+  font-size: 12px;
+}
+.page.right {
+  background:
+    linear-gradient(270deg, rgba(0,0,0,.03), transparent 18px),
+    var(--paper-2);
+}
+.spine {
+  background: linear-gradient(90deg, #d7ccc6, #eee8e2 40%, #cfc4bc);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+  box-shadow: inset 4px 0 8px rgba(0,0,0,.08), inset -4px 0 8px rgba(0,0,0,.08);
+}
+.ring {
+  width: 18px; height: 10px; border-radius: 50%;
+  background: linear-gradient(90deg, #9aa0a6, #e8ecef 45%, #6d7378);
+  box-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+/* Page bits */
+.pg-title {
+  font-size: 22px; font-weight: 400; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--pink-d); margin-bottom: 10px;
+}
+.pg-kicker { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.hdr {
+  background: var(--pink-h); color: #5c3d44; font-size: 10px; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase; padding: 5px 8px; margin: 8px 0 6px;
+}
+.hdr.y { background: #f6e3a8; }
+.hdr.o { background: #f6c9a8; }
+.hdr.g { background: #cfe8d4; }
+.hdr.t { background: #c5e6e2; }
+.hdr.b { background: #c9daf0; }
+.hdr.v { background: #ddd0ee; }
+.linkish {
+  display: block; padding: 2px 0; cursor: pointer; color: var(--ink);
+  border-bottom: 1px solid var(--line); font-size: 11px;
+}
+.linkish:hover { color: var(--pink-d); }
+.cols { display: grid; gap: 8px; }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.box {
+  border: 1px solid var(--line); padding: 6px 8px; min-height: 42px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.box > span, .lbl {
+  font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700;
+}
+.line-list .ce { border-bottom: 1px solid var(--line); min-height: 18px; padding: 2px 0; }
+.dots {
+  background-image: radial-gradient(#e4d2cd 1px, transparent 1.2px);
+  background-size: 10px 10px;
+}
+.ruled {
+  background-image: repeating-linear-gradient(transparent 0 21px, #f0ddd8 21px 22px);
+}
+.gridp {
+  background-image:
+    linear-gradient(#efddd8 1px, transparent 1px),
+    linear-gradient(90deg, #efddd8 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+.cal { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 11px; }
+.cal th { font-size: 8px; letter-spacing: .1em; color: var(--muted); padding: 4px 0; font-weight: 700; }
+.cal td {
+  border: 1px solid var(--line); height: 62px; vertical-align: top; padding: 3px;
+  cursor: pointer;
+}
+.cal td.empty { background: #faf6f4; cursor: default; }
+.cal td.today { outline: 2px solid var(--pink-d); outline-offset: -2px; }
+.cal .n { font-weight: 700; font-size: 11px; color: var(--pink-d); cursor: pointer; }
+.cal .n:hover { text-decoration: underline; }
+.habit-wrap { overflow-x: auto; }
+.habit { width: max-content; min-width: 100%; }
+.habit th, .habit td { text-align: center; padding: 1px; border: 1px solid var(--line); font-size: 8px; }
+.habit .check { width: 12px; height: 12px; }
+.cal .wk {
+  width: 22px; border: none; cursor: pointer; background: var(--pink-h);
+  font-size: 8px; font-weight: 800; color: #5c3d44;
+}
+.mini-cal { font-size: 9px; }
+.mini-cal td { height: 18px; text-align: center; cursor: pointer; border: none; padding: 1px; }
+.mini-cal .n { color: var(--ink); font-weight: 500; }
+.tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile {
+  aspect-ratio: 1.15; border-radius: 18px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+  border: none; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  font-size: 11px; color: #3a3030; box-shadow: 0 4px 0 rgba(0,0,0,.04);
+}
+.tile svg { width: 36px; height: 36px; stroke: #6a6260; fill: none; stroke-width: 1.6; }
+.check { display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border: 1.5px solid var(--pink-d); border-radius: 3px;
+  cursor: pointer; font-size: 11px; color: var(--pink-d); background: #fff; }
+.check.on { background: var(--pink-h); }
+.stars span { cursor: pointer; font-size: 18px; color: #ddd2cc; }
+.stars span.on { color: #d4a017; }
+.glasses span, .dots-track span {
+  display: inline-block; width: 16px; height: 20px; margin: 0 2px; cursor: pointer;
+  border: 1.5px solid #9ec4d4; border-radius: 0 0 8px 8px; background: #fff;
+}
+.glasses span.on { background: #9ec4d4; }
+.dots-track span { width: 14px; height: 14px; border-radius: 50%; border-color: #8fbf8a; }
+.dots-track span.on { background: #8fbf8a; }
+.day-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 10px; }
+.time-col { font-size: 10px; }
+.time-row { display: grid; grid-template-columns: 38px 1fr; border-bottom: 1px solid var(--line); min-height: 18px; }
+.time-row b { color: var(--muted); font-weight: 500; font-size: 9px; padding-top: 2px; }
+.week-day { border: 1px solid var(--line); min-height: 78px; padding: 4px 6px; margin-bottom: 6px; cursor: pointer; }
+.week-day strong { font-size: 10px; letter-spacing: .08em; color: var(--pink-d); }
+.jar-wrap { display: flex; gap: 10px; align-items: stretch; }
+.jar {
+  width: 90px; height: 160px; border: 3px solid #c9a96e; border-radius: 8px 8px 28px 28px;
+  position: relative; overflow: hidden; background: #fff;
+}
+.jar-fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(#f6e27a, #e0b84e); }
+.jar-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #5c3d44; }
+.eq { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; min-height: 280px; }
+.eq > div { border: 1px solid var(--line); padding: 8px; }
+.eq h3 { font-size: 11px; margin-bottom: 6px; letter-spacing: .06em; }
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.chip { border: 1px solid var(--line); background: #fff; padding: 6px 10px; border-radius: 999px; cursor: pointer; font-size: 11px; }
+.chip.on { background: var(--pink-h); border-color: var(--pink-d); }
+.cover {
+  height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  position: relative;
+}
+.cover .ornament {
+  width: 120px; height: 120px; border: 1px solid var(--gold); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+}
+.cover h1 { font-weight: 400; font-size: 42px; letter-spacing: .18em; text-transform: uppercase; }
+.cover .year { font-size: 64px; color: var(--pink-d); letter-spacing: .12em; font-weight: 200; }
+.cover .sub { margin-top: 10px; letter-spacing: .22em; text-transform: uppercase; font-size: 11px; color: var(--muted); }
+.btn-open {
+  margin-top: 28px; background: var(--ink); color: #fff; border: none;
+  padding: 12px 28px; letter-spacing: .16em; text-transform: uppercase; cursor: pointer; font-size: 11px;
+}
+.btn-open:hover { background: #4a3f3c; }
+.wheel { width: 220px; height: 220px; margin: 8px auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 11px; }
+table.data th, table.data td { border-bottom: 1px solid var(--line); padding: 4px; text-align: left; }
+table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
+.add-row { margin-top: 6px; font-size: 11px; cursor: pointer; color: var(--pink-d); background: none; border: none; }
+.warn { font-size: 10px; color: #a06050; background: #fbeee8; padding: 6px 8px; margin-bottom: 8px; }
+.nav-mini { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.nav-mini button {
+  background: var(--pink-h); border: none; padding: 4px 8px; cursor: pointer; font-size: 11px; color: #5c3d44;
+}
+.paper-icons { display: flex; gap: 8px; flex-wrap: wrap; }
+.paper-icons button {
+  width: 48px; height: 58px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 9px;
+}
+.toast {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  background: #2a2624; color: #fff; padding: 8px 14px; border-radius: 999px; font-size: 12px;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.toast.show { opacity: 1; }
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .device { height: auto; min-height: calc(100vh - 48px); border-radius: 0; padding: 8px; width: 100%; }
+  .spread { grid-template-columns: 1fr; }
+  .spine, .side-left { display: none; }
+  .page { min-height: 70vh; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="chrome">
+    <div><strong>Drea Planner</strong> · 2026</div>
+    <div class="tools">
+      <button type="button" data-nav="today">Heute</button>
+      <button type="button" data-nav="settings">Farben</button>
+      <button type="button" id="btnExport">Export</button>
+      <button type="button" id="btnImport">Import</button>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="device">
+      <div class="planner" id="planner">
+        <div class="top-tabs" id="topTabs"></div>
+        <div class="side-left"><button class="home-btn" data-nav="index" title="Index">⌂</button></div>
+        <div class="spread">
+          <div class="page" id="left"></div>
+          <div class="spine" id="spine"></div>
+          <div class="page right" id="right"></div>
+        </div>
+        <div class="side-right" id="monthTabs"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="importFile" accept="application/json" hidden />
+<div class="toast" id="toast"></div>
+<script>
+(function () {
+  const YEAR = 2026;
+  const KEY = "drea-planner-2026-v1";
+  const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const MSHORT = ["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT","NOV","DEZ"];
+  const DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+  const DSHORT = ["MO","DI","MI","DO","FR","SA","SO"];
+  const THEMES = {
+    rosa: { accent:"#f4b7c4", tab:"#f7c5d0", d:"#e59aaa" },
+    grau: { accent:"#c5bdb8", tab:"#d9d2cd", d:"#8a827c" },
+    violett: { accent:"#d1bce3", tab:"#e2d3ef", d:"#9a7ab3" },
+    blau: { accent:"#b7d4e4", tab:"#cfe3ee", d:"#6e9bb0" }
+  };
+  const TOP = [
+    ["prod", "Produktivität"],
+    ["org", "Organisation"],
+    ["wohl", "Wohlbefinden"],
+    ["life", "Lifestyle"],
+    ["notes", "Notizen"],
+    ["goals", "Ziele"]
+  ];
+
+  const today = new Date();
+  const todayStr = iso(today.getFullYear() === YEAR ? today : new Date(YEAR, 7, 24));
+
+  let nav = { view: "cover", month: Number(todayStr.slice(5,7)), date: todayStr, n: 1, paper: "lined" };
+  let data = load();
+
+  function iso(d) {
+    const x = d instanceof Date ? d : new Date(d);
+    return x.getFullYear() + "-" + String(x.getMonth()+1).padStart(2,"0") + "-" + String(x.getDate()).padStart(2,"0");
+  }
+  function parse(s) { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+  function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+  function get(path, fallback) {
+    const v = path.split(".").reduce((o,k) => (o == null ? o : o[k]), data);
+    return v == null ? fallback : v;
+  }
+  function set(path, val) {
+    const keys = path.split(".");
+    let o = data;
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (typeof o[keys[i]] !== "object" || o[keys[i]] == null) o[keys[i]] = {};
+      o = o[keys[i]];
+    }
+    o[keys[keys.length-1]] = val;
+    save();
+  }
+  function load() {
+    try { return Object.assign(defaults(), JSON.parse(localStorage.getItem(KEY) || "null") || {}); }
+    catch (e) { return defaults(); }
+  }
+  function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+  function defaults() {
+    return {
+      settings: { theme: "rosa", owner: "" },
+      daily: {}, weekly: {}, monthly: {}, cal: {},
+      finance: {}, savings: { for: "", goal: "", until: "", motivation: "", entries: [] },
+      subs: [],
+      projects: Array.from({length:10}, () => ({title:"",prio:0,start:"",end:"",notes:""})),
+      notebooks: Array.from({length:10}, () => ({title:"",body:""})),
+      goals: Array.from({length:10}, () => ({title:"",why:"",steps:"",deadline:"",done:0})),
+      habits: [{n:"Wasser"},{n:"Bewegen"},{n:"Lesen"},{n:"Meditieren"},{n:"Früh schlafen"}],
+      habitDays: {},
+      routines: { morning: ["","",""], evening: ["","",""], week: {} },
+      tasks: [],
+      eisenhower: { ui:"", uni:"", nui:"", nuni:"" },
+      meetings: { date:"", title:"", address:"", people:"", notes:"", contacts:"" },
+      birthdays: "", household: "", recipes: "", contacts: "", logins: "",
+      challenge: { title:"", start:"", duration:"", deadline:"", reward:"", mot:"", plan:"", days:{} },
+      fitness: {}, body: { weight:"", sleep:"", notes:"" }, vitamins: "", gifts: "",
+      trips: { dest:"", days:"", packing:"", notes:"" },
+      events: "", movies: "", books: "", wishlist: "", vorsaetze: "",
+      wheel: { Gesundheit:6, Karriere:5, Finanzen:4, Familie:7, Romantik:5, Freunde:6, Wachstum:5, Spass:6 },
+      study: { subject:"", exam:"", notes:"", plan:"" },
+      meals: {}, photos: {}, notesPaper: { lined:"", grid:"", dots:"", blank:"", cornell:"" },
+      stickers: [],
+      braindump: "", inbox: "", shortlist: "", tagesablauf: "",
+      reviews: {}, yearplan: "", yearfin: "", yearphotos: ""
+    };
+  }
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 1600);
+  }
+  function applyTheme() {
+    const th = THEMES[data.settings.theme] || THEMES.rosa;
+    const r = document.documentElement.style;
+    r.setProperty("--accent", th.accent);
+    r.setProperty("--tab", th.tab);
+    r.setProperty("--pink", th.accent);
+    r.setProperty("--pink-d", th.d);
+    r.setProperty("--pink-h", th.tab);
+  }
+  function isoWeek(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - day);
+    const ys = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date - ys) / 86400000) + 1) / 7);
+  }
+  function mondayOf(d) {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const day = x.getDay() || 7;
+    x.setDate(x.getDate() - day + 1);
+    return x;
+  }
+  function monthCells(y, m) {
+    const first = new Date(y, m-1, 1);
+    let dow = first.getDay(); dow = dow === 0 ? 6 : dow - 1;
+    const n = new Date(y, m, 0).getDate();
+    const cells = Array(dow).fill(null);
+    for (let i = 1; i <= n; i++) cells.push(i);
+    while (cells.length % 7) cells.push(null);
+    return cells;
+  }
+  function ce(path, ph, cls) {
+    return `<div class="ce ${cls||""}" contenteditable="true" data-path="${path}" data-ph="${ph||""}">${esc(get(path,""))}</div>`;
+  }
+  function inp(path, ph) {
+    return `<input class="plain" data-path="${path}" data-ph="${ph||""}" placeholder="${ph||""}" value="${esc(get(path,""))}" />`;
+  }
+
+  function renderChrome() {
+    document.getElementById("topTabs").innerHTML = TOP.map(([id,label]) =>
+      `<button class="tab ${nav.view===id || (id==="notes"&&nav.view==="paper")?"active":""}" data-nav="${id}">${label}</button>`
+    ).join("");
+    document.getElementById("monthTabs").innerHTML =
+      `<button class="mtab year ${nav.view==="year"?"active":""}" data-nav="year">2026</button>` +
+      MSHORT.map((m,i) => `<button class="mtab ${nav.view==="month"&&nav.month===i+1?"active":""}" data-nav="month:${i+1}">${m}</button>`).join("");
+    document.getElementById("spine").innerHTML = Array.from({length:20}, () => `<i class="ring"></i>`).join("");
+  }
+
+  function go(spec) {
+    const [view, arg] = String(spec).split(":");
+    if (view === "today") { nav.view = "day"; nav.date = todayStr; nav.month = Number(todayStr.slice(5,7)); }
+    else if (view === "month") { nav.view = "month"; nav.month = Number(arg); }
+    else if (view === "day") { nav.view = "day"; nav.date = arg; nav.month = Number(arg.slice(5,7)); }
+    else if (view === "week") { nav.view = "week"; nav.date = arg; nav.month = Number(arg.slice(5,7)); }
+    else if (view === "finm") { nav.view = "finm"; nav.month = Number(arg); }
+    else if (view === "review") { nav.view = "review"; nav.month = Number(arg); }
+    else if (view === "project") { nav.view = "project"; nav.n = Number(arg); }
+    else if (view === "nb") { nav.view = "nb"; nav.n = Number(arg); }
+    else if (view === "goal") { nav.view = "goal"; nav.n = Number(arg); }
+    else if (view === "paper") { nav.view = "paper"; nav.paper = arg || "lined"; }
+    else nav.view = view;
+    const hash = view === "today" ? "day:" + todayStr : spec;
+    if (location.hash.slice(1) !== hash) history.replaceState(null, "", "#" + hash);
+    render();
+  }
+
+  function indexLeft() {
+    const months = MONTHS.map((m,i) => `<span class="linkish" data-nav="month:${i+1}">${m}</span>`).join("");
+    const fins = MONTHS.map((m,i) => `<span class="linkish" data-nav="finm:${i+1}">${m}</span>`).join("");
+    const revs = MONTHS.map((m,i) => `<span class="linkish" data-nav="review:${i+1}">${m}</span>`).join("");
+    const projs = Array.from({length:10}, (_,i) => `<span class="linkish" data-nav="project:${i+1}">#${i+1} ${esc(data.projects[i].title)||"Projekt"}</span>`).join("");
+    const nbs = Array.from({length:10}, (_,i) => `<span class="linkish" data-nav="nb:${i+1}">#${i+1} ${esc(data.notebooks[i].title)||"Notizbuch"}</span>`).join("");
+    return `
+      <div class="pg-kicker">Drea Planner 2026</div>
+      <h2 class="pg-title">Index</h2>
+      <div class="hdr">Jahr</div>
+      <span class="linkish" data-nav="year">Jahresübersicht</span>
+      <span class="linkish" data-nav="yearplan">Jahresplaner</span>
+      <span class="linkish" data-nav="finyear">Finanzübersicht</span>
+      <span class="linkish" data-nav="photos">Jahr in Fotos</span>
+      <div class="cols cols-3">
+        <div><div class="hdr">Monate</div>${months}</div>
+        <div><div class="hdr">Finanzen</div>${fins}</div>
+        <div><div class="hdr g">Rückblick</div>${revs}</div>
+      </div>
+      <div class="cols cols-2">
+        <div><div class="hdr g">Projekte</div>${projs}</div>
+        <div><div class="hdr v">Notizbücher</div>${nbs}</div>
+      </div>`;
+  }
+  function indexRight() {
+    const goals = Array.from({length:10}, (_,i) => `<span class="linkish" data-nav="goal:${i+1}">#${i+1} ${esc(data.goals[i].title)||"Ziel"}</span>`).join("");
+    return `
+      <div class="hdr y">Produktivität</div>
+      <span class="linkish" data-nav="routinen">Routinen</span>
+      <span class="linkish" data-nav="tracker">Tracker</span>
+      <span class="linkish" data-nav="aufgaben">Aufgabenplaner</span>
+      <span class="linkish" data-nav="eisenhower">Eisenhower Matrix</span>
+      <span class="linkish" data-nav="meeting">Meeting</span>
+      <div class="hdr o">Organisation</div>
+      <span class="linkish" data-nav="orgdash">Übersicht</span>
+      <span class="linkish" data-nav="geburtstage">Geburtstage</span>
+      <span class="linkish" data-nav="haushalt">Haushalt</span>
+      <span class="linkish" data-nav="rezepte">Rezepte</span>
+      <span class="linkish" data-nav="kontakte">Kontakte</span>
+      <span class="linkish" data-nav="zugang">Zugangsdaten</span>
+      <div class="hdr">Wohlbefinden</div>
+      <span class="linkish" data-nav="challenge">30 Tage Challenge</span>
+      <span class="linkish" data-nav="fitness">Fitness</span>
+      <span class="linkish" data-nav="koerper">Körperparameter</span>
+      <span class="linkish" data-nav="vitamine">Vitamine</span>
+      <span class="linkish" data-nav="geschenke">Geschenkplaner</span>
+      <span class="linkish" data-nav="lebensrad">Lebensrad</span>
+      <div class="hdr t">Lifestyle</div>
+      <span class="linkish" data-nav="reise">Reiseplaner</span>
+      <span class="linkish" data-nav="events">Eventplaner</span>
+      <span class="linkish" data-nav="filme">Filme und Serien</span>
+      <span class="linkish" data-nav="buecher">Bücher</span>
+      <span class="linkish" data-nav="wunschliste">Wunschliste</span>
+      <span class="linkish" data-nav="studium">Studium</span>
+      <span class="linkish" data-nav="essen">Speiseplan</span>
+      <div class="hdr b">Notizpapier</div>
+      <div class="paper-icons">
+        <button data-nav="paper:blank">Leer</button>
+        <button data-nav="paper:lined">Liniert</button>
+        <button data-nav="paper:grid">Kariert</button>
+        <button data-nav="paper:dots">Punkte</button>
+        <button data-nav="paper:cornell">Cornell</button>
+      </div>
+      <div class="hdr v">Ziele</div>
+      ${goals}`;
+  }
+
+  function yearPage() {
+    const minis = MONTHS.map((name,i) => {
+      const cells = monthCells(YEAR, i+1);
+      let html = `<div><div class="hdr" data-nav="month:${i+1}" style="cursor:pointer">${name}</div>
+        <table class="cal mini-cal"><tr>${DSHORT.map(d=>`<th>${d}</th>`).join("")}</tr><tr>`;
+      cells.forEach((c,idx) => {
+        if (idx && idx%7===0) html += "</tr><tr>";
+        const ds = c ? `${YEAR}-${String(i+1).padStart(2,"0")}-${String(c).padStart(2,"0")}` : "";
+        html += `<td class="${c?"":"empty"}" ${c?`data-nav="day:${ds}"`:""}>${c?`<span class="n">${c}</span>`:""}</td>`;
+      });
+      return html + "</tr></table></div>";
+    });
+    return { left: `<h2 class="pg-title">2026</h2><div class="cols cols-2">${minis.slice(0,6).join("")}</div>`,
+             right: `<div class="pg-kicker">Jahresübersicht</div><div class="cols cols-2">${minis.slice(6).join("")}</div>` };
+  }
+
+  function monthPage(m) {
+    const cells = monthCells(YEAR, m);
+    const weeks = [];
+    for (let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
+    let table = `<table class="cal"><tr><th></th>${DAYS.map(d=>`<th>${d.slice(0,2)}</th>`).join("")}</tr>`;
+    weeks.forEach(w => {
+      const first = w.find(Boolean);
+      const d0 = first ? new Date(YEAR, m-1, first) : null;
+      const mon = d0 ? iso(mondayOf(d0)) : "";
+      table += `<tr><td class="wk" ${mon?`data-nav="week:${mon}"`:""}>KW</td>`;
+      w.forEach(c => {
+        if (!c) { table += `<td class="empty"></td>`; return; }
+        const ds = `${YEAR}-${String(m).padStart(2,"0")}-${String(c).padStart(2,"0")}`;
+        const note = get("cal."+ds, "");
+        const isT = ds === todayStr;
+        table += `<td class="${isT?"today":""}"><div class="n" data-nav="day:${ds}">${c}</div>${ce("cal."+ds,"")}</td>`;
+      });
+      table += "</tr>";
+    });
+    table += "</table>";
+    return {
+      left: `<div class="nav-mini"><button data-nav="month:${m===1?12:m-1}">←</button>
+        <h2 class="pg-title" style="margin:0">${MONTHS[m-1]} 2026</h2>
+        <button data-nav="month:${m===12?1:m+1}">→</button></div>
+        ${table}<p class="pg-kicker" style="margin-top:8px">Zahl → Tag · KW → Woche</p>`,
+      right: `<div class="hdr">Tracker · ${MONTHS[m-1]}</div>
+        ${habitTable(m)}
+        <div class="hdr">Notizen</div>
+        ${ce("monthly."+m+".notes","", "dots")}
+        <div class="hdr">Wichtig</div>
+        ${ce("monthly."+m+".wichtig","Termine, Reisen, Deadlines", "line-list")}`
+    };
+  }
+
+  function habitTable(m) {
+    const days = new Date(YEAR, m, 0).getDate();
+    let h = `<table class="data habit"><tr><th></th>`;
+    for (let d=1;d<=days;d++) h += `<th>${d}</th>`;
+    h += "</tr>";
+    (data.habits||[]).forEach((hab, hi) => {
+      h += `<tr><td style="text-align:left;min-width:70px">${ce("habits."+hi+".n","Habit")}</td>`;
+      for (let d=1;d<=days;d++) {
+        const key = `${YEAR}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}:${hi}`;
+        const on = data.habitDays[key] ? "on" : "";
+        h += `<td><span class="check ${on}" data-toggle="habitDays.${key}"></span></td>`;
+      }
+      h += "</tr>";
+    });
+    return `<div class="habit-wrap">${h}</table></div>`;
+  }
+
+  function weekPage(dateStr) {
+    const mon = mondayOf(parse(dateStr));
+    const kw = isoWeek(mon);
+    const days = Array.from({length:7}, (_,i) => {
+      const d = new Date(mon); d.setDate(mon.getDate()+i);
+      return d;
+    });
+    const block = (d) => {
+      const ds = iso(d);
+      return `<div class="week-day">
+        <strong data-nav="day:${ds}" style="cursor:pointer">${String(d.getDate()).padStart(2,"0")} / ${DAYS[d.getDay()===0?6:d.getDay()-1].toUpperCase()}</strong>
+        ${ce("daily."+ds+".week","")}
+      </div>`;
+    };
+    const prev = iso(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()-7));
+    const next = iso(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()+7));
+    return {
+      left: `<div class="nav-mini"><button data-nav="week:${prev}">←</button>
+        <h2 class="pg-title" style="margin:0">${MONTHS[mon.getMonth()]} ${YEAR} / KW ${kw}</h2>
+        <button data-nav="week:${next}">→</button></div>
+        ${days.slice(0,4).map(block).join("")}`,
+      right: `${days.slice(4).map(block).join("")}
+        <div class="hdr">Notizen</div>
+        ${ce("weekly."+kw+".notes","", "dots")}`
+    };
+  }
+
+  function dayPage(dateStr) {
+    const d = parse(dateStr);
+    const ds = dateStr;
+    const dow = DAYS[d.getDay()===0?6:d.getDay()-1];
+    const p = "daily."+ds+".";
+    const times = [];
+    for (let h=7; h<=22; h++) times.push(String(h).padStart(2,"0")+":00");
+    const prev = iso(new Date(d.getFullYear(), d.getMonth(), d.getDate()-1));
+    const next = iso(new Date(d.getFullYear(), d.getMonth(), d.getDate()+1));
+    const water = Array.from({length:8}, (_,i) =>
+      `<span class="${get(p+"water."+i)? "on":""}" data-toggle="${p}water.${i}"></span>`).join("");
+    const veg = Array.from({length:5}, (_,i) =>
+      `<span class="${get(p+"veg."+i)? "on":""}" data-toggle="${p}veg.${i}"></span>`).join("");
+    const mood = Number(get(p+"mood", 0));
+    const stars = Array.from({length:5}, (_,i) =>
+      `<span class="${i<mood?"on":""}" data-star="${p}mood:${i+1}">★</span>`).join("");
+    const todos = Array.from({length:6}, (_,i) =>
+      `<div style="display:flex;gap:6px;align-items:center;margin:3px 0">
+        <span class="check ${get(p+"todoOn."+i)?"on":""}" data-toggle="${p}todoOn.${i}"></span>
+        ${ce(p+"todo."+i,"")}
+      </div>`).join("");
+    return {
+      left: `<div class="nav-mini"><button data-nav="day:${prev}">←</button>
+        <div><div class="pg-kicker">${dow}</div><h2 class="pg-title" style="margin:0">${d.getDate()} | ${MONTHS[d.getMonth()]} ${YEAR}</h2></div>
+        <button data-nav="day:${next}">→</button></div>
+        <div class="hdr">Tagesziele</div>
+        <div class="line-list">${ce(p+"g1","01")} ${ce(p+"g2","02")} ${ce(p+"g3","03")}</div>
+        <div class="cols cols-2">
+          <div class="box" style="background:#fdeef1"><span>Priorität</span>${ce(p+"prio","")}</div>
+          <div><span class="lbl">To do</span>${todos}</div>
+        </div>
+        <div class="hdr">Termine</div>
+        <div class="time-col">${times.map(t => `<div class="time-row"><b>${t}</b>${ce(p+"t."+t,"")}</div>`).join("")}</div>
+        <div class="hdr">Essensplan</div>
+        <div class="cols cols-2">
+          <div class="box"><span>Frühstück</span>${ce(p+"bf","")}</div>
+          <div class="box"><span>Mittagessen</span>${ce(p+"lu","")}</div>
+          <div class="box"><span>Abendessen</span>${ce(p+"di","")}</div>
+          <div class="box"><span>Snacks</span>${ce(p+"sn","")}</div>
+        </div>`,
+      right: `<div class="box"><span>Nicht vergessen</span>${ce(p+"forget","")}</div>
+        <div class="hdr">Tolle Dinge…</div>
+        <div class="line-list">${ce(p+"good1","1")} ${ce(p+"good2","2")} ${ce(p+"good3","3")}</div>
+        <div class="hdr">Gläser Wasser</div><div class="glasses">${water}</div>
+        <div class="hdr">Dinge, die ich besser machen kann…</div>
+        <div class="line-list">${ce(p+"better1","1")} ${ce(p+"better2","2")} ${ce(p+"better3","3")}</div>
+        <div class="hdr">Portionen Obst / Gemüse</div><div class="dots-track">${veg}</div>
+        <div class="box"><span>Sport / Fitness</span>${ce(p+"sport","")}</div>
+        <div class="hdr">So war mein Tag</div><div class="stars">${stars}</div>
+        <div class="hdr">Notizen</div>${ce(p+"notes","", "dots")}`
+    };
+  }
+
+  function savingsPage() {
+    const entries = data.savings.entries || [];
+    const goal = parseFloat(String(data.savings.goal).replace(",", ".")) || 0;
+    const sum = entries.reduce((a,e) => a + (parseFloat(e.amt)||0), 0);
+    const pct = goal ? Math.min(100, Math.round(sum / goal * 100)) : 0;
+    const rows = entries.map((e,i) => `<tr>
+      <td>${inp("savings.entries."+i+".amt","0")}</td>
+      <td>${inp("savings.entries."+i+".date","")}</td>
+      <td>${inp("savings.entries."+i+".note","")}</td>
+    </tr>`).join("");
+    return {
+      left: `<h2 class="pg-title">Spar Tracker</h2>
+        <div class="box"><span>Ich spare für</span>${ce("savings.for","")}</div>
+        <div class="box"><span>Mein Ziel (€)</span>${ce("savings.goal","")}</div>
+        <div class="box"><span>Bis wann</span>${ce("savings.until","")}</div>
+        <div class="box"><span>Motivation</span>${ce("savings.motivation","")}</div>
+        <div class="jar-wrap" style="margin-top:12px">
+          <div class="jar"><div class="jar-fill" style="height:${pct}%"></div><div class="jar-pct">${pct}%</div></div>
+          <div><div class="lbl">Gesamt Ersparnis</div><div style="font-size:28px">${sum.toFixed(0)} €</div>
+          <div class="muted">von ${goal||0} €</div></div>
+        </div>`,
+      right: `<div class="hdr">Einzahlungen</div>
+        <table class="data"><tr><th>Betrag</th><th>Datum</th><th>Notizen</th></tr>${rows}</table>
+        <button class="add-row" id="addSave">+ Eintrag</button>
+        <div class="hdr">Abonnements</div>
+        ${subsTable()}`
+    };
+  }
+  function subsTable() {
+    if (!data.subs.length) data.subs = [{name:"", monthly:"", renew:""}];
+    const rows = data.subs.map((s,i) => `<tr>
+      <td>${inp("subs."+i+".name","Name")}</td>
+      <td>${inp("subs."+i+".monthly","€")}</td>
+      <td>${inp("subs."+i+".renew","Datum")}</td>
+    </tr>`).join("");
+    const total = data.subs.reduce((a,s)=>a+(parseFloat(s.monthly)||0),0);
+    return `<table class="data"><tr><th>Abo</th><th>Monat</th><th>Erneuerung</th></tr>${rows}</table>
+      <button class="add-row" id="addSub">+ Abo</button>
+      <div style="margin-top:6px">Summe / Monat: <strong>${total.toFixed(2)} €</strong> · Jahr: <strong>${(total*12).toFixed(2)} €</strong></div>`;
+  }
+
+  function financeMonth(m) {
+    const key = "finance."+m;
+    if (!get(key+".inc")) set(key+".inc", [{n:"",a:""},{n:"",a:""},{n:"",a:""}]);
+    if (!get(key+".exp")) set(key+".exp", [{n:"",a:""},{n:"",a:""},{n:"",a:""},{n:"",a:""}]);
+    const inc = get(key+".inc", []);
+    const exp = get(key+".exp", []);
+    const ti = inc.reduce((a,x)=>a+(parseFloat(x.a)||0),0);
+    const te = exp.reduce((a,x)=>a+(parseFloat(x.a)||0),0);
+    const row = (arr, path) => arr.map((x,i)=>`<tr><td>${inp(path+"."+i+".n","")}</td><td>${inp(path+"."+i+".a","0")}</td></tr>`).join("");
+    return {
+      left: `<h2 class="pg-title">Finanzen · ${MONTHS[m-1]}</h2>
+        <div class="hdr g">Einnahmen</div>
+        <table class="data"><tr><th>Posten</th><th>€</th></tr>${row(inc, key+".inc")}</table>
+        <button class="add-row" id="addInc">+ Einnahme</button>
+        <div>Summe: <strong>${ti.toFixed(2)} €</strong></div>`,
+      right: `<div class="hdr">Ausgaben</div>
+        <table class="data"><tr><th>Posten</th><th>€</th></tr>${row(exp, key+".exp")}</table>
+        <button class="add-row" id="addExp">+ Ausgabe</button>
+        <div>Summe: <strong>${te.toFixed(2)} €</strong></div>
+        <div class="hdr">${te<=ti?"Überschuss":"Defizit"}</div>
+        <div style="font-size:28px;color:${te<=ti?"#4a8a5a":"#a05050"}">${(ti-te).toFixed(2)} €</div>
+        <div class="hdr">Notizen</div>${ce(key+".notes","","dots")}`
+    };
+  }
+
+  function projectPage(n) {
+    const i = n-1;
+    const p = "projects."+i+".";
+    const stars = Array.from({length:3}, (_,s) =>
+      `<span class="${s < (data.projects[i].prio||0)?"on":""}" data-star="${p}prio:${s+1}">★</span>`).join("");
+    const cards = (from,to) => Array.from({length:to-from+1}, (_,k) => {
+      const j = from+k-1;
+      return `<div class="box" data-nav="project:${j+1}" style="cursor:pointer">
+        <span>Projekt #${j+1}</span>
+        <strong>${esc(data.projects[j].title)||"–"}</strong>
+      </div>`;
+    }).join("");
+    return {
+      left: `<h2 class="pg-title">Projekte im Überblick</h2>
+        ${[1,2,3].map(num => {
+          const j = num-1; const pp = "projects."+j+".";
+          return `<div class="box" style="margin-bottom:8px">
+            <span>Projekt #${num}</span>
+            <div class="lbl">Titel</div>${ce(pp+"title","")}
+            <div class="lbl">Beginn / Frist</div>
+            <div class="cols cols-2">${ce(pp+"start","")} ${ce(pp+"end","")}</div>
+          </div>`;
+        }).join("")}`,
+      right: `${[4,5,6].map(num => {
+          const j = num-1; const pp = "projects."+j+".";
+          return `<div class="box" style="margin-bottom:8px">
+            <span>Projekt #${num}</span>
+            <div class="lbl">Titel</div>${ce(pp+"title","")}
+            <div class="cols cols-2">${ce(pp+"start","Start")} ${ce(pp+"end","Frist")}</div>
+          </div>`;
+        }).join("")}
+        <div class="hdr">Projekt #${n} Details</div>
+        <div class="lbl">Priorität</div><div class="stars">${stars}</div>
+        ${ce(p+"notes","","dots")}
+        <div class="hdr">Alle</div>${cards(7,10)}`
+    };
+  }
+
+  function goalPage(n) {
+    const i = n-1; const p = "goals."+i+".";
+    return {
+      left: `<h2 class="pg-title">Ziel #${n}</h2>
+        <div class="box"><span>Titel</span>${ce(p+"title","")}</div>
+        <div class="box"><span>Warum ist es wichtig?</span>${ce(p+"why","")}</div>
+        <div class="box"><span>Frist</span>${ce(p+"deadline","")}</div>
+        <div class="lbl">Fortschritt</div>
+        <input type="range" min="0" max="100" data-path="${p}done" value="${get(p+"done",0)}" />
+        <div>${get(p+"done",0)}%</div>`,
+      right: `<div class="hdr">Schritte</div>${ce(p+"steps","","ruled")}
+        <div class="hdr">Weitere Ziele</div>
+        ${data.goals.map((g,idx)=>`<span class="linkish" data-nav="goal:${idx+1}">#${idx+1} ${esc(g.title)||"Ziel"}</span>`).join("")}`
+    };
+  }
+
+  function orgDash() {
+    const tiles = [
+      ["kontakte","#f6e27a","Kontakt Tracker","☎"],
+      ["termine","#f6c07a","Wichtige Termine","📅"],
+      ["geburtstage","#f4b7c4","Geburtstag-Tracker","🎂"],
+      ["day:"+todayStr,"#f3c5d6","Termin","⏰"],
+      ["aufgaben","#f8d5de","Aufgabenliste","☑"],
+      ["zugang","#c5e0f0","Passwort Tracker","🔒"],
+      ["brain","#b8e4ea","Brain-Dump","💡"],
+      ["stickers","#c8ead4","Lieblingsaufkleber","♥"],
+      ["inbox","#d5edc4","Inbox","↓"],
+      ["shortlist","#ddd0ee","Kurze Liste","✎"],
+      ["tagesablauf","#d8d4f0","Tagesablauf","◔"],
+      ["essen","#c9daf0","Speiseplan","🍽"]
+    ];
+    const left = tiles.slice(0,6).map(t =>
+      `<button class="tile" style="background:${t[1]}" data-nav="${t[0]}"><span style="font-size:28px">${t[3]}</span>${t[2]}</button>`).join("");
+    const right = tiles.slice(6).map(t =>
+      `<button class="tile" style="background:${t[1]}" data-nav="${t[0]}"><span style="font-size:28px">${t[3]}</span>${t[2]}</button>`).join("");
+    return { left: `<h2 class="pg-title">Organisation</h2><div class="tile-grid">${left}</div>`,
+             right: `<div class="tile-grid">${right}</div>` };
+  }
+
+  function fitnessPage() {
+    const days = DAYS;
+    const hours = Array.from({length:15}, (_,i)=> (7+i)+":00");
+    const col = (di) => `<div><div class="hdr">${days[di].slice(0,2)}</div>
+      ${hours.map(h => `<div class="time-row"><b>${h}</b>${ce("fitness."+di+"."+h,"")}</div>`).join("")}</div>`;
+    return {
+      left: `<h2 class="pg-title">Fitness</h2><div class="cols cols-2">${[0,1,2,3].map(col).join("")}</div>`,
+      right: `<div class="cols cols-2">${[4,5,6].map(col).join("")}<div class="dots" style="min-height:200px;padding:8px">${ce("fitness.notes","Notizen")}</div></div>`
+    };
+  }
+
+  function mealPage() {
+    return {
+      left: `<h2 class="pg-title">Essen</h2>` + DAYS.slice(0,4).map((d,i) =>
+        `<div class="box" style="margin-bottom:8px"><span>${d}</span>
+          <div class="cols cols-2">${ce("meals."+i+".bf","Frühstück")} ${ce("meals."+i+".lu","Mittag")}
+          ${ce("meals."+i+".di","Abend")} ${ce("meals."+i+".sn","Snacks")}</div></div>`).join(""),
+      right: DAYS.slice(4).map((d,i) =>
+        `<div class="box" style="margin-bottom:8px"><span>${d}</span>
+          <div class="cols cols-2">${ce("meals."+(i+4)+".bf","Frühstück")} ${ce("meals."+(i+4)+".lu","Mittag")}
+          ${ce("meals."+(i+4)+".di","Abend")} ${ce("meals."+(i+4)+".sn","Snacks")}</div></div>`).join("") +
+        `<div class="hdr">Einkaufsliste</div>${ce("meals.shop","","ruled")}`
+    };
+  }
+
+  function challengePage() {
+    const days = Array.from({length:30}, (_,i) => {
+      const on = data.challenge.days[i] ? "on" : "";
+      return `<div style="text-align:center"><div class="check ${on}" data-toggle="challenge.days.${i}" style="width:28px;height:28px;border-radius:50%"></div>
+        <div class="lbl">Tag ${i+1}</div></div>`;
+    }).join("");
+    return {
+      left: `<h2 class="pg-title">30 Tage Challenge</h2>
+        <div class="box"><span>Titel</span>${ce("challenge.title","")}</div>
+        <div class="cols cols-3">
+          <div class="box"><span>Beginn</span>${ce("challenge.start","")}</div>
+          <div class="box"><span>Dauer</span>${ce("challenge.duration","")}</div>
+          <div class="box"><span>Frist</span>${ce("challenge.deadline","")}</div>
+        </div>
+        <div class="box"><span>Belohnung</span>${ce("challenge.reward","")}</div>
+        <div class="hdr">Motivation</div>${ce("challenge.mot","","line-list")}
+        <div class="hdr">Vorgehensweise</div>${ce("challenge.plan","","ruled")}`,
+      right: `<div class="hdr">Tracker</div><div class="cols" style="grid-template-columns:repeat(6,1fr);gap:10px">${days}</div>`
+    };
+  }
+
+  function lebensrad() {
+    const keys = Object.keys(data.wheel);
+    const cx=110, cy=110, r=90;
+    const pts = keys.map((k,i) => {
+      const v = Number(data.wheel[k])||0;
+      const a = (Math.PI*2*i)/keys.length - Math.PI/2;
+      const rr = r * v / 10;
+      return `${cx+Math.cos(a)*rr},${cy+Math.sin(a)*rr}`;
+    }).join(" ");
+    const labels = keys.map((k,i) => {
+      const a = (Math.PI*2*i)/keys.length - Math.PI/2;
+      return `<text x="${cx+Math.cos(a)*102}" y="${cy+Math.sin(a)*102}" text-anchor="middle" font-size="8">${k}</text>`;
+    }).join("");
+    const sliders = keys.map(k => `<div class="lbl">${k} · ${data.wheel[k]}</div>
+      <input type="range" min="1" max="10" data-path="wheel.${k}" value="${data.wheel[k]}" />`).join("");
+    return {
+      left: `<h2 class="pg-title">Lebensrad</h2>
+        <svg class="wheel" viewBox="0 0 220 220">
+          ${[2,4,6,8,10].map(v => `<circle cx="110" cy="110" r="${9*v}" fill="none" stroke="#ecd9d4"/>`).join("")}
+          <polygon points="${pts}" fill="rgba(229,154,170,.35)" stroke="#e59aaa" />
+          ${labels}
+        </svg>`,
+      right: `<div class="hdr">Bewertung 1–10</div>${sliders}
+        <div class="hdr">Fokus diese Woche</div>${ce("wheel.focus","","ruled")}`
+    };
+  }
+
+  function paperPage() {
+    const cls = { lined:"ruled", grid:"gridp", dots:"dots", blank:"", cornell:"ruled" }[nav.paper] || "";
+    const title = { lined:"Liniert", grid:"Kariert", dots:"Punktgitter", blank:"Leer", cornell:"Cornell" }[nav.paper];
+    return {
+      left: `<h2 class="pg-title">${title}</h2><div class="${cls}" style="min-height:90%">${ce("notesPaper."+nav.paper,"")}</div>`,
+      right: nav.paper==="cornell"
+        ? `<div class="cols cols-2" style="height:90%"><div class="ruled" style="min-height:100%">${ce("notesPaper.cornellL","Stichworte")}</div>
+           <div class="ruled" style="min-height:100%">${ce("notesPaper.cornellR","Zusammenfassung")}</div></div>`
+        : `<div class="hdr">Weiteres Papier</div>
+           <span class="linkish" data-nav="paper:blank">Leer</span>
+           <span class="linkish" data-nav="paper:lined">Liniert</span>
+           <span class="linkish" data-nav="paper:grid">Kariert</span>
+           <span class="linkish" data-nav="paper:dots">Punkte</span>
+           <span class="linkish" data-nav="paper:cornell">Cornell</span>
+           <div class="hdr">Brain-Dump</div>${ce("braindump","","dots")}`
+    };
+  }
+
+  function simple(title, path, extraRight) {
+    return {
+      left: `<h2 class="pg-title">${title}</h2>${ce(path,"", "ruled")}`,
+      right: extraRight || `<div class="hdr">Notizen</div>${ce(path+"Notes","","dots")}`
+    };
+  }
+
+  function cover() {
+    return {
+      left: `<div class="cover">
+        <div class="year">2026</div>
+        <div class="sub">All-in-One Digital Planner</div>
+        <div class="ornament" style="margin-top:28px;border-color:var(--pink-d)">
+          <div style="width:88px;height:88px;border-radius:50%;border:1px solid var(--gold)"></div>
+        </div>
+        <div class="sub">Datiert · Deutsch · Für immer deins</div>
+      </div>`,
+      right: `<div class="cover">
+        <div class="sub">Willkommen</div>
+        <h1>Drea<br>Planner</h1>
+        <div class="sub">Fokus · Struktur · Balance</div>
+        <div class="box" style="width:220px;margin-top:18px;text-align:left"><span>Dieser Planer gehört</span>${ce("settings.owner","Dein Name")}</div>
+        <button class="btn-open" data-nav="index">Planer öffnen</button>
+      </div>`
+    };
+  }
+
+  function settingsPage() {
+    const chips = Object.keys(THEMES).map(k =>
+      `<button class="chip ${data.settings.theme===k?"on":""}" data-theme="${k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join("");
+    return {
+      left: `<h2 class="pg-title">Einstellungen</h2>
+        <div class="hdr">Tab-Farbe</div>
+        <div class="chip-row">${chips}</div>
+        <p style="color:var(--muted);font-size:11px;margin-top:8px">Rosa, Grau, Violett oder Blau — wie im Originalplaner.</p>
+        <div class="hdr">Daten</div>
+        <p style="font-size:12px;line-height:1.5">Alles bleibt lokal in diesem Browser. Export speichert eine JSON-Datei. Import stellt sie wieder her.</p>
+        <button class="btn-open" id="wipe" style="background:#a05050">Alles löschen</button>`,
+      right: `<div class="hdr">Inhalt</div>
+        ${TOP.map(([id,l]) => `<span class="linkish" data-nav="${id}">${l}</span>`).join("")}
+        <span class="linkish" data-nav="index">Index</span>
+        <span class="linkish" data-nav="cover">Cover</span>`
+    };
+  }
+
+  function pages() {
+    const v = nav.view;
+    if (v==="cover") return cover();
+    if (v==="index") return { left: indexLeft(), right: indexRight() };
+    if (v==="year") return yearPage();
+    if (v==="yearplan") return simple("Jahresplaner", "yearplan");
+    if (v==="finyear") return { left: `<h2 class="pg-title">Finanzübersicht 2026</h2>` + MONTHS.map((m,i)=>{
+      const inc=(get("finance."+(i+1)+".inc",[])||[]).reduce((a,x)=>a+(parseFloat(x.a)||0),0);
+      const exp=(get("finance."+(i+1)+".exp",[])||[]).reduce((a,x)=>a+(parseFloat(x.a)||0),0);
+      return `<span class="linkish" data-nav="finm:${i+1}">${m}: +${inc.toFixed(0)} / −${exp.toFixed(0)} €</span>`;
+    }).join(""), right: savingsPage().right };
+    if (v==="photos") return simple("Jahr in Fotos", "yearphotos", `<div class="hdr">Erinnerungen</div>${ce("photos.notes","","dots")}<p class="pg-kicker">Schreibe Momente je Monat — Bilder bleiben in deinem Kopf oder Notizbuch.</p>`);
+    if (v==="month") return monthPage(nav.month);
+    if (v==="week") return weekPage(nav.date);
+    if (v==="day") return dayPage(nav.date);
+    if (v==="finm") return financeMonth(nav.month);
+    if (v==="review") return simple("Rückblick · "+MONTHS[nav.month-1], "reviews."+nav.month);
+    if (v==="project" || v==="projects") return projectPage(nav.n||1);
+    if (v==="nb") return { left:`<h2 class="pg-title">Notizbuch #${nav.n}</h2>${ce("notebooks."+(nav.n-1)+".title","Titel")}<div class="ruled" style="min-height:80%">${ce("notebooks."+(nav.n-1)+".body","")}</div>`,
+      right: `<div class="hdr">Alle Notizbücher</div>`+data.notebooks.map((n,i)=>`<span class="linkish" data-nav="nb:${i+1}">#${i+1} ${esc(n.title)||"Notizbuch"}</span>`).join("") };
+    if (v==="goal" || v==="goals") return goalPage(nav.n||1);
+    if (v==="prod") return { left:`<h2 class="pg-title">Produktivität</h2>
+      <span class="linkish" data-nav="routinen">Routinen</span><span class="linkish" data-nav="tracker">Tracker</span>
+      <span class="linkish" data-nav="aufgaben">Aufgabenplaner</span><span class="linkish" data-nav="eisenhower">Eisenhower Matrix</span>
+      <span class="linkish" data-nav="meeting">Meeting</span><span class="linkish" data-nav="quartal">Quartalsplaner</span>`,
+      right: orgDash().right };
+    if (v==="org") return orgDash();
+    if (v==="orgdash") return orgDash();
+    if (v==="wohl") return { left:`<h2 class="pg-title">Wohlbefinden</h2>
+      <span class="linkish" data-nav="challenge">30 Tage Challenge</span><span class="linkish" data-nav="fitness">Fitness</span>
+      <span class="linkish" data-nav="koerper">Körperparameter</span><span class="linkish" data-nav="vitamine">Vitamine</span>
+      <span class="linkish" data-nav="geschenke">Geschenkplaner</span><span class="linkish" data-nav="lebensrad">Lebensrad</span>`,
+      right: challengePage().right };
+    if (v==="life") return { left:`<h2 class="pg-title">Lifestyle</h2>
+      <span class="linkish" data-nav="reise">Reiseplaner</span><span class="linkish" data-nav="events">Eventplaner</span>
+      <span class="linkish" data-nav="filme">Filme und Serien</span><span class="linkish" data-nav="buecher">Bücher</span>
+      <span class="linkish" data-nav="wunschliste">Wunschliste</span><span class="linkish" data-nav="studium">Studium</span>
+      <span class="linkish" data-nav="essen">Speiseplan</span>`, right: mealPage().right };
+    if (v==="notes") return paperPage();
+    if (v==="paper") return paperPage();
+    if (v==="routinen") return { left:`<h2 class="pg-title">Routine</h2>
+      <div class="hdr">Morgen</div>${[0,1,2,3,4].map(i=>ce("routines.morning."+i,"")).join("")}
+      <div class="hdr">Abend</div>${[0,1,2,3,4].map(i=>ce("routines.evening."+i,"")).join("")}`,
+      right: `<div class="hdr">Diese Woche</div>${habitTable(nav.month)}` };
+    if (v==="tracker") return { left:`<h2 class="pg-title">Tracker</h2>${habitTable(nav.month)}`, right: monthPage(nav.month).right };
+    if (v==="aufgaben") {
+      if (!data.tasks.length) data.tasks = [{t:"",on:false},{t:"",on:false},{t:"",on:false}];
+      return { left:`<h2 class="pg-title">Aufgabenplaner</h2>` + data.tasks.map((t,i)=>
+        `<div style="display:flex;gap:8px;align-items:center;margin:6px 0">
+          <span class="check ${t.on?"on":""}" data-toggle="tasks.${i}.on"></span>${ce("tasks."+i+".t","Aufgabe")}</div>`).join("") +
+        `<button class="add-row" id="addTask">+ Aufgabe</button>`,
+        right:`<div class="hdr">Kurze Liste</div>${ce("shortlist","","ruled")}` };
+    }
+    if (v==="eisenhower") return { left:`<h2 class="pg-title">Eisenhower</h2><div class="eq">
+        <div style="background:#fdeef1"><h3>Dringend · Wichtig</h3>${ce("eisenhower.ui","")}</div>
+        <div style="background:#f7f0d8"><h3>Nicht dringend · Wichtig</h3>${ce("eisenhower.uni","")}</div>
+        <div style="background:#e8f0f7"><h3>Dringend · Nicht wichtig</h3>${ce("eisenhower.nui","")}</div>
+        <div style="background:#eee"><h3>Weder noch</h3>${ce("eisenhower.nuni","")}</div></div>`,
+      right: simple("Inbox","inbox").right };
+    if (v==="meeting") return simple("Sitzungsprotokoll", "meetings.notes",
+      `<div class="box"><span>Datum</span>${ce("meetings.date","")}</div>
+       <div class="box"><span>Titel</span>${ce("meetings.title","")}</div>
+       <div class="box"><span>Teilnehmer</span>${ce("meetings.people","")}</div>
+       <div class="hdr">Kontakte</div>${ce("meetings.contacts","","ruled")}`);
+    if (v==="quartal") return { left:`<h2 class="pg-title">Quartalsplaner</h2>
+      <div class="box" style="min-height:160px"><span>Quartal 1</span>${ce("yearplan.q1","")}</div>
+      <div class="box" style="min-height:160px"><span>Quartal 2</span>${ce("yearplan.q2","")}</div>`,
+      right:`<div class="box" style="min-height:160px"><span>Quartal 3</span>${ce("yearplan.q3","")}</div>
+        <div class="box" style="min-height:160px"><span>Quartal 4</span>${ce("yearplan.q4","")}</div>` };
+    if (v==="geburtstage") return simple("Geburtstage","birthdays");
+    if (v==="haushalt") return simple("Haushalt","household");
+    if (v==="rezepte") return simple("Rezepte","recipes");
+    if (v==="kontakte") return simple("Kontakte","contacts");
+    if (v==="zugang") return { left:`<h2 class="pg-title">Zugangsdaten</h2>
+      <div class="warn">Nur lokal in diesem Browser gespeichert — nicht für echte Passwörter gedacht. Das PDF-Original ist ebenfalls unverschlüsselt.</div>
+      ${ce("logins","","ruled")}`, right: simple("Passwort Tracker","logins").right };
+    if (v==="challenge") return challengePage();
+    if (v==="fitness") return fitnessPage();
+    if (v==="koerper") return { left:`<h2 class="pg-title">Körperparameter</h2>
+      <div class="box"><span>Gewicht</span>${ce("body.weight","")}</div>
+      <div class="box"><span>Schlaf</span>${ce("body.sleep","")}</div>
+      <div class="hdr">Notizen</div>${ce("body.notes","","ruled")}`, right: simple("Vitamine","vitamine").right };
+    if (v==="vitamine") return simple("Vitamine","vitamine");
+    if (v==="geschenke") return simple("Geschenkplaner","gifts");
+    if (v==="lebensrad") return lebensrad();
+    if (v==="reise") return { left:`<h2 class="pg-title">Reiseplaner</h2>
+      <div class="box"><span>Ziel</span>${ce("trips.dest","")}</div>
+      <div class="box"><span>Tage</span>${ce("trips.days","")}</div>
+      <div class="hdr">Packliste</div>${ce("trips.packing","","ruled")}`,
+      right:`<div class="hdr">Notizen</div>${ce("trips.notes","","dots")}` };
+    if (v==="events") return simple("Eventplaner","events");
+    if (v==="filme") return simple("Filme und Serien","movies");
+    if (v==="buecher") return simple("Bücher","books");
+    if (v==="wunschliste") return simple("Wunschliste","wishlist");
+    if (v==="studium") return { left:`<h2 class="pg-title">Studium</h2>
+      <div class="box"><span>Fach</span>${ce("study.subject","")}</div>
+      <div class="box"><span>Prüfung</span>${ce("study.exam","")}</div>
+      <div class="hdr">Lernplan</div>${ce("study.plan","","ruled")}`,
+      right:`<div class="hdr">Notizen</div>${ce("study.notes","","dots")}` };
+    if (v==="essen") return mealPage();
+    if (v==="savings" || v==="finyear") return savingsPage();
+    if (v==="termine") return dayPage(todayStr);
+    if (v==="brain") return simple("Brain-Dump","braindump");
+    if (v==="stickers") {
+      const pal = Array.from("🌸⭐💖✅☕📚🏃🌙🔥🌿✈️🎉💪🧘💧☀️🎵🛒🏠💼🎯🌈🍓🎂✨🫶");
+      if (!data.stickers) data.stickers = [];
+      return {
+        left: `<h2 class="pg-title">Lieblingsaufkleber</h2>
+          <p class="pg-kicker">Tippe, um einen Sticker auf die Seite zu legen</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:28px">${pal.map(e=>`<button type="button" class="chip" data-sticker-add="${e}" style="font-size:24px;border:none;background:transparent;cursor:pointer">${e}</button>`).join("")}</div>`,
+        right: `<div class="hdr">Meine Seite</div>
+          <div style="min-height:70%;font-size:32px;line-height:1.4">${(data.stickers||[]).map((e,i)=>`<span data-sticker-del="${i}" style="cursor:pointer" title="Entfernen">${e}</span>`).join(" ")}</div>
+          <p class="pg-kicker">Tippe einen Sticker zum Entfernen</p>`
+      };
+    }
+    if (v==="inbox") return simple("Inbox","inbox");
+    if (v==="shortlist") return simple("Kurze Liste","shortlist");
+    if (v==="tagesablauf") return simple("Tagesablauf","tagesablauf");
+    if (v==="settings") return settingsPage();
+    return { left: indexLeft(), right: indexRight() };
+  }
+
+  function render() {
+    applyTheme();
+    renderChrome();
+    const p = pages();
+    document.getElementById("left").innerHTML = p.left;
+    document.getElementById("right").innerHTML = p.right;
+    bindDynamic();
+  }
+
+  function bindDynamic() {
+    const addSave = document.getElementById("addSave");
+    if (addSave) addSave.onclick = () => { data.savings.entries.push({amt:"",date:"",note:""}); save(); render(); };
+    const addSub = document.getElementById("addSub");
+    if (addSub) addSub.onclick = () => { data.subs.push({name:"",monthly:"",renew:""}); save(); render(); };
+    const addTask = document.getElementById("addTask");
+    if (addTask) addTask.onclick = () => { data.tasks.push({t:"",on:false}); save(); render(); };
+    const addInc = document.getElementById("addInc");
+    if (addInc) addInc.onclick = () => {
+      const m = nav.month; if (!data.finance[m]) data.finance[m] = {};
+      if (!Array.isArray(data.finance[m].inc)) data.finance[m].inc = [];
+      data.finance[m].inc.push({n:"",a:""}); save(); render();
+    };
+    const addExp = document.getElementById("addExp");
+    if (addExp) addExp.onclick = () => {
+      const m = nav.month; if (!data.finance[m]) data.finance[m] = {};
+      if (!Array.isArray(data.finance[m].exp)) data.finance[m].exp = [];
+      data.finance[m].exp.push({n:"",a:""}); save(); render();
+    };
+    const wipe = document.getElementById("wipe");
+    if (wipe) wipe.onclick = () => { if (confirm("Wirklich alle Planerdaten löschen?")) { data = defaults(); save(); render(); toast("Zurückgesetzt"); } };
+  }
+
+  document.addEventListener("click", (e) => {
+    const theme = e.target.closest("[data-theme]");
+    if (theme) { data.settings.theme = theme.dataset.theme; save(); render(); return; }
+    const add = e.target.closest("[data-sticker-add]");
+    if (add) {
+      if (!data.stickers) data.stickers = [];
+      data.stickers.push(add.dataset.stickerAdd);
+      save(); render(); return;
+    }
+    const del = e.target.closest("[data-sticker-del]");
+    if (del) {
+      data.stickers.splice(Number(del.dataset.stickerDel), 1);
+      save(); render(); return;
+    }
+    const tog = e.target.closest("[data-toggle]");
+    if (tog) {
+      const path = tog.dataset.toggle;
+      const cur = get(path, false);
+      set(path, !cur);
+      render();
+      return;
+    }
+    const star = e.target.closest("[data-star]");
+    if (star) {
+      const [path, n] = star.dataset.star.split(":");
+      set(path, Number(n));
+      render();
+      return;
+    }
+    const n = e.target.closest("[data-nav]");
+    if (n && !e.target.closest("[data-path], input, textarea")) { go(n.dataset.nav); }
+  });
+
+  document.addEventListener("input", (e) => {
+    const el = e.target.closest("[data-path]");
+    if (!el) return;
+    const val = el.tagName === "INPUT" || el.tagName === "TEXTAREA" ? el.value : el.innerText;
+    set(el.dataset.path, el.type === "range" ? Number(val) : val);
+    if (el.type === "range") render();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") go("index");
+  });
+
+  document.getElementById("btnExport").onclick = () => {
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "drea-planner-2026.json";
+    a.click();
+    toast("Exportiert");
+  };
+  document.getElementById("btnImport").onclick = () => document.getElementById("importFile").click();
+  document.getElementById("importFile").onchange = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { try { data = Object.assign(defaults(), JSON.parse(r.result)); save(); render(); toast("Importiert"); } catch(err){ toast("Ungültige Datei"); } };
+    r.readAsText(f);
+  };
+
+  applyTheme();
+  if (location.hash.length > 1) go(decodeURIComponent(location.hash.slice(1)));
+  else render();
+})();
+</script>
+</body>
+</html>
