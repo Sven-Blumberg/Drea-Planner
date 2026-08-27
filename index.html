@@ -286,6 +286,49 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
   opacity: 0; pointer-events: none; transition: opacity .2s;
 }
 .toast.show { opacity: 1; }
+.page.fill { display: flex; flex-direction: column; overflow: hidden; }
+.board-kicker { font-size: 10px; letter-spacing: .04em; color: var(--muted); margin: -4px 0 8px; }
+.board-grid {
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+  gap: 8px; flex: 1; min-height: 0;
+}
+.lane {
+  border: 1px dashed #e2d2cc; border-radius: 8px; padding: 6px 6px 4px;
+  display: flex; flex-direction: column; min-height: 0; background: rgba(255,255,255,.55);
+}
+.lane.over { outline: 2px dashed var(--pink-d); background: #fff6f4; }
+.lane.hot { outline: 2px solid #e59aaa; }
+.lane-h { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; margin-bottom: 4px; }
+.lane-h b { font-size: 12px; font-weight: 800; letter-spacing: .02em; text-transform: lowercase; }
+.lane-h em { font-style: normal; font-size: 8px; color: var(--muted); font-weight: 600; }
+.lane-hint { font-size: 8px; line-height: 1.25; color: var(--muted); margin-bottom: 4px; }
+.lane-notes {
+  flex: 1; overflow: auto; display: flex; flex-wrap: wrap;
+  align-content: flex-start; gap: 6px; min-height: 48px;
+}
+.sticky {
+  width: 86px; min-height: 86px; padding: 10px 8px 8px;
+  font-size: 10.5px; line-height: 1.25; cursor: grab;
+  box-shadow: 2px 3px 6px rgba(40,20,20,.12);
+  position: relative; border: none; text-align: left;
+}
+.sticky:nth-child(odd) { transform: rotate(-1.4deg); }
+.sticky:nth-child(even) { transform: rotate(1.1deg); }
+.sticky.y { background: #ffe566; }
+.sticky.g { background: #c8e86a; }
+.sticky.o { background: #ff9f43; color: #3a2412; }
+.sticky.b { background: #7ec8e3; }
+.sticky .ce { min-height: 52px; font-size: 10.5px; }
+.sticky .x {
+  position: absolute; top: 2px; right: 4px; border: none; background: none;
+  cursor: pointer; font-size: 11px; opacity: .35; line-height: 1;
+}
+.sticky .x:hover { opacity: .8; }
+.pad-tools { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+.swatch {
+  width: 16px; height: 16px; border: 1px solid rgba(0,0,0,.15); cursor: pointer; border-radius: 2px;
+}
+.swatch.on { outline: 2px solid var(--ink); outline-offset: 1px; }
 @media (max-width: 900px) {
   body { overflow: auto; }
   .device { height: auto; min-height: calc(100vh - 48px); border-radius: 0; padding: 8px; width: 100%; }
@@ -301,6 +344,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     <div><strong>Drea Planner</strong> · 2026</div>
     <div class="tools">
       <button type="button" data-nav="today">Heute</button>
+      <button type="button" data-nav="board">Board</button>
       <button type="button" data-nav="settings">Farben</button>
       <button type="button" id="btnExport">Export</button>
       <button type="button" id="btnImport">Import</button>
@@ -402,7 +446,8 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
       meals: {}, photos: {}, notesPaper: { lined:"", grid:"", dots:"", blank:"", cornell:"" },
       stickers: [],
       braindump: "", inbox: "", shortlist: "", tagesablauf: "",
-      reviews: {}, yearplan: "", yearfin: "", yearphotos: ""
+      reviews: {}, yearplan: "", yearfin: "", yearphotos: "",
+      board: { color: "y", notes: [] }
     };
   }
   function toast(msg) {
@@ -450,7 +495,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
 
   function renderChrome() {
     document.getElementById("topTabs").innerHTML = TOP.map(([id,label]) =>
-      `<button class="tab ${nav.view===id || (id==="notes"&&nav.view==="paper")?"active":""}" data-nav="${id}">${label}</button>`
+      `<button class="tab ${nav.view===id || (id==="notes"&&nav.view==="paper") || (id==="prod"&&nav.view==="board")?"active":""}" data-nav="${id}">${label}</button>`
     ).join("");
     document.getElementById("monthTabs").innerHTML =
       `<button class="mtab year ${nav.view==="year"?"active":""}" data-nav="year">2026</button>` +
@@ -504,6 +549,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     const goals = Array.from({length:10}, (_,i) => `<span class="linkish" data-nav="goal:${i+1}">#${i+1} ${esc(data.goals[i].title)||"Ziel"}</span>`).join("");
     return `
       <div class="hdr y">Produktivität</div>
+      <span class="linkish" data-nav="board">Agiles Notizbuch / Canvas Board</span>
       <span class="linkish" data-nav="routinen">Routinen</span>
       <span class="linkish" data-nav="tracker">Tracker</span>
       <span class="linkish" data-nav="aufgaben">Aufgabenplaner</span>
@@ -833,6 +879,58 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
              right: `<div class="tile-grid">${right}</div>` };
   }
 
+  function ensureBoard() {
+    if (!data.board || !Array.isArray(data.board.notes)) data.board = { color: "y", notes: [] };
+    if (!data.board.color) data.board.color = "y";
+  }
+  function boardNoteHtml(n) {
+    return `<article class="sticky ${n.color || "y"}" draggable="true" data-note-id="${n.id}">
+      <button type="button" class="x" data-board-del="${n.id}" title="Entfernen">×</button>
+      <div class="ce" contenteditable="true" data-note-text="${n.id}" data-ph="…">${esc(n.text)}</div>
+    </article>`;
+  }
+  function boardLane(lane) {
+    ensureBoard();
+    const notes = data.board.notes.filter(n => n.lane === lane.id);
+    const wip = lane.wip ? `<em>${notes.length}/${lane.wip}</em>` : `<em>${notes.length}</em>`;
+    const hot = lane.wip && notes.length > lane.wip ? " hot" : "";
+    const pad = lane.pad ? `<div class="pad-tools">
+        <button type="button" class="swatch y ${data.board.color==="y"?"on":""}" data-board-color="y" style="background:#ffe566"></button>
+        <button type="button" class="swatch g ${data.board.color==="g"?"on":""}" data-board-color="g" style="background:#c8e86a"></button>
+        <button type="button" class="swatch o ${data.board.color==="o"?"on":""}" data-board-color="o" style="background:#ff9f43"></button>
+        <button type="button" class="swatch b ${data.board.color==="b"?"on":""}" data-board-color="b" style="background:#7ec8e3"></button>
+        <button type="button" class="add-row" data-board-add="1">+ Zettel</button>
+      </div>` : "";
+    return `<section class="lane${hot}" data-lane="${lane.id}">
+      <div class="lane-h"><b>${lane.title}</b>${wip}</div>
+      <div class="lane-hint">${lane.hint}</div>
+      ${pad}
+      <div class="lane-notes">${notes.map(boardNoteHtml).join("")}</div>
+    </section>`;
+  }
+  function boardPage() {
+    const leftLanes = [
+      { id:"todo", title:"to do.", hint:"Hier werden deine To-dos visualisiert, nach Wichtigkeit sortiert & laufend ergänzt." },
+      { id:"doing", title:"doing.", hint:"Hier kommen deine aktuellen To-dos hin. Begrenze sie, so verzettelst du dich nicht.", wip:3 },
+      { id:"onhold", title:"on hold.", hint:"Der Wartebereich für To-dos, mit denen du gerade nicht weiterkommst." },
+      { id:"done", title:"done.", hint:"Deine erledigten To-dos klebst du hierhin. Und auf geht’s mit der nächsten Aufgabe!" }
+    ];
+    const rightLanes = [
+      { id:"think", title:"think tank.", hint:"Hier kannst du deine Ideen & Pläne sammeln. So behältst du sie immer im Blick." },
+      { id:"backlog", title:"backlog.", hint:"Behalte zukünftige Aufgaben im Blick. Sobald etwas aktuell wird, bewege es zu to do." },
+      { id:"best", title:"best of done.", hint:"Sammle deine Erfolge & besten Dones. Für mehr Motivation im Alltag!" },
+      { id:"pad", title:"sticky notes.", hint:"Griffbereit immer dabei – zum Notieren aller To-dos & Ideen.", pad:true }
+    ];
+    return {
+      left: `<h2 class="pg-title">Canvas Board</h2>
+        <p class="board-kicker">Kurz erklärt. So funktioniert dein agiles Notizbuch. · Zettel ziehen</p>
+        <div class="board-grid">${leftLanes.map(boardLane).join("")}</div>`,
+      right: `<h2 class="pg-title">Agiles Notizbuch</h2>
+        <p class="board-kicker">Ideen, Zukunft, Erfolge & Vorrat · Farbe wählen, Zettel anlegen, ziehen</p>
+        <div class="board-grid">${rightLanes.map(boardLane).join("")}</div>`
+    };
+  }
+
   function fitnessPage() {
     const days = DAYS;
     const hours = Array.from({length:15}, (_,i)=> (7+i)+":00");
@@ -964,6 +1062,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
         <button class="btn-open" id="wipe" style="background:#a05050">Alles löschen</button>`,
       right: `<div class="hdr">Inhalt</div>
         ${TOP.map(([id,l]) => `<span class="linkish" data-nav="${id}">${l}</span>`).join("")}
+        <span class="linkish" data-nav="board">Canvas Board</span>
         <span class="linkish" data-nav="index">Index</span>
         <span class="linkish" data-nav="cover">Cover</span>`
     };
@@ -991,10 +1090,12 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
       right: `<div class="hdr">Alle Notizbücher</div>`+data.notebooks.map((n,i)=>`<span class="linkish" data-nav="nb:${i+1}">#${i+1} ${esc(n.title)||"Notizbuch"}</span>`).join("") };
     if (v==="goal" || v==="goals") return goalPage(nav.n||1);
     if (v==="prod") return { left:`<h2 class="pg-title">Produktivität</h2>
+      <span class="linkish" data-nav="board">Agiles Notizbuch / Canvas Board</span>
       <span class="linkish" data-nav="routinen">Routinen</span><span class="linkish" data-nav="tracker">Tracker</span>
       <span class="linkish" data-nav="aufgaben">Aufgabenplaner</span><span class="linkish" data-nav="eisenhower">Eisenhower Matrix</span>
       <span class="linkish" data-nav="meeting">Meeting</span><span class="linkish" data-nav="quartal">Quartalsplaner</span>`,
       right: orgDash().right };
+    if (v==="board") return boardPage();
     if (v==="org") return orgDash();
     if (v==="orgdash") return orgDash();
     if (v==="wohl") return { left:`<h2 class="pg-title">Wohlbefinden</h2>
@@ -1097,6 +1198,8 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     const p = pages();
     document.getElementById("left").innerHTML = p.left;
     document.getElementById("right").innerHTML = p.right;
+    document.getElementById("left").classList.toggle("fill", nav.view === "board");
+    document.getElementById("right").classList.toggle("fill", nav.view === "board");
     bindDynamic();
   }
 
@@ -1121,6 +1224,45 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     };
     const wipe = document.getElementById("wipe");
     if (wipe) wipe.onclick = () => { if (confirm("Wirklich alle Planerdaten löschen?")) { data = defaults(); save(); render(); toast("Zurückgesetzt"); } };
+    bindBoard();
+  }
+
+  function moveBoardNote(id, lane) {
+    ensureBoard();
+    const note = data.board.notes.find(n => n.id === id);
+    if (!note || note.lane === lane) return;
+    if (lane === "doing") {
+      const n = data.board.notes.filter(x => x.lane === "doing" && x.id !== id).length;
+      if (n >= 3) toast("doing: max. 3 aktuelle To-dos — so verzettelst du dich nicht");
+    }
+    note.lane = lane;
+    save();
+    render();
+  }
+  function bindBoard() {
+    if (nav.view !== "board") return;
+    document.querySelectorAll(".sticky").forEach(el => {
+      el.addEventListener("dragstart", e => {
+        if (e.target.closest("[contenteditable], .x")) { e.preventDefault(); return; }
+        e.dataTransfer.setData("text/plain", el.dataset.noteId);
+        e.dataTransfer.effectAllowed = "move";
+      });
+      const ce = el.querySelector("[data-note-text]");
+      if (ce) {
+        ce.addEventListener("mousedown", () => { el.draggable = false; });
+        ce.addEventListener("blur", () => { el.draggable = true; });
+      }
+    });
+    document.querySelectorAll(".lane").forEach(lane => {
+      lane.addEventListener("dragover", e => { e.preventDefault(); lane.classList.add("over"); });
+      lane.addEventListener("dragleave", () => lane.classList.remove("over"));
+      lane.addEventListener("drop", e => {
+        e.preventDefault();
+        lane.classList.remove("over");
+        const id = e.dataTransfer.getData("text/plain");
+        if (id) moveBoardNote(id, lane.dataset.lane);
+      });
+    });
   }
 
   document.addEventListener("click", (e) => {
@@ -1130,6 +1272,25 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     if (add) {
       if (!data.stickers) data.stickers = [];
       data.stickers.push(add.dataset.stickerAdd);
+      save(); render(); return;
+    }
+    const color = e.target.closest("[data-board-color]");
+    if (color) { ensureBoard(); data.board.color = color.dataset.boardColor; save(); render(); return; }
+    const addNote = e.target.closest("[data-board-add]");
+    if (addNote) {
+      ensureBoard();
+      data.board.notes.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        text: "",
+        lane: "pad",
+        color: data.board.color || "y"
+      });
+      save(); render(); return;
+    }
+    const delNote = e.target.closest("[data-board-del]");
+    if (delNote) {
+      ensureBoard();
+      data.board.notes = data.board.notes.filter(n => n.id !== delNote.dataset.boardDel);
       save(); render(); return;
     }
     const del = e.target.closest("[data-sticker-del]");
@@ -1153,10 +1314,17 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
       return;
     }
     const n = e.target.closest("[data-nav]");
-    if (n && !e.target.closest("[data-path], input, textarea")) { go(n.dataset.nav); }
+    if (n && !e.target.closest("[data-path], input, textarea, [data-note-text], .sticky")) { go(n.dataset.nav); }
   });
 
   document.addEventListener("input", (e) => {
+    const noteEl = e.target.closest("[data-note-text]");
+    if (noteEl) {
+      ensureBoard();
+      const note = data.board.notes.find(n => n.id === noteEl.dataset.noteText);
+      if (note) { note.text = noteEl.innerText; save(); }
+      return;
+    }
     const el = e.target.closest("[data-path]");
     if (!el) return;
     const val = el.tagName === "INPUT" || el.tagName === "TEXTAREA" ? el.value : el.innerText;
@@ -1165,7 +1333,10 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") go("index");
+    if (e.key === "Escape") {
+      if (e.target && e.target.isContentEditable) { e.target.blur(); return; }
+      go("index");
+    }
   });
 
   document.getElementById("btnExport").onclick = () => {
