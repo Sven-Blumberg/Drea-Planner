@@ -2,7 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Drea Planner 2026</title>
 <style>
 :root {
@@ -23,14 +26,21 @@
   --shadow: rgba(40, 20, 20, .18);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+html, body {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
 body {
   font-family: "Avenir Next", "Segoe UI", "Century Gothic", sans-serif;
   background:
     radial-gradient(1200px 600px at 50% -10%, #3a322e 0%, var(--bg) 55%);
   color: var(--ink);
-  overflow: hidden;
 }
+body.is-dragging { touch-action: none; user-select: none; -webkit-user-select: none; }
 button, a { font-family: inherit; }
 .ce:empty:before { content: attr(data-ph); color: #cbb8b4; }
 .ce, input.plain, textarea.plain {
@@ -42,41 +52,52 @@ input.plain, textarea.plain { resize: none; }
 /* Device */
 .app {
   height: 100%;
+  height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr;
+  min-height: 0;
 }
 .chrome {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 18px 4px; color: #e8ddd6; font-size: 12px; letter-spacing: .08em;
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
+  color: #e8ddd6; font-size: 12px; letter-spacing: .08em;
+  background: #1c1a19;
 }
 .chrome strong { font-weight: 600; color: #fff; letter-spacing: .16em; text-transform: uppercase; }
-.chrome .tools { display: flex; gap: 8px; }
+.chrome .tools { display: flex; gap: 8px; flex-wrap: wrap; }
 .chrome button {
   background: transparent; color: #e8ddd6; border: 1px solid #5a4f4a;
-  border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 11px; letter-spacing: .06em;
+  border-radius: 999px; padding: 8px 14px; cursor: pointer; font-size: 12px; letter-spacing: .06em;
+  min-height: 40px;
 }
 .chrome button:hover { border-color: var(--pink); color: #fff; }
 
 .stage {
   display: flex; align-items: center; justify-content: center;
-  padding: 0 16px 16px; height: 100%; min-height: 0;
+  padding: 0 12px max(12px, env(safe-area-inset-bottom));
+  min-height: 0;
 }
 .device {
   width: min(1280px, 100%);
-  height: min(860px, calc(100vh - 52px));
+  height: 100%;
+  max-height: 100%;
   background: var(--bezel);
   border-radius: 28px;
   padding: 14px;
   box-shadow: 0 40px 80px rgba(0,0,0,.45), inset 0 0 0 1px #2a2624;
   display: flex; flex-direction: column;
+  min-height: 0;
 }
 .planner {
   flex: 1; min-height: 0;
   background: #e9e0d8;
   border-radius: 14px;
   display: grid;
-  grid-template-rows: 34px 1fr;
-  grid-template-columns: 22px 1fr 42px;
+  grid-template-rows: 44px 1fr;
+  grid-template-columns: 32px 1fr 40px;
   overflow: hidden;
   position: relative;
 }
@@ -86,29 +107,34 @@ input.plain, textarea.plain { resize: none; }
   grid-column: 1 / -1;
   display: flex; justify-content: center; gap: 6px;
   padding: 6px 48px 0; background: #e9e0d8;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  flex-wrap: nowrap;
 }
 .tab {
   border: none; cursor: pointer; font-size: 9px; font-weight: 700;
   letter-spacing: .08em; text-transform: uppercase;
-  padding: 7px 10px 8px; border-radius: 8px 8px 0 0;
+  padding: 10px 12px 8px; border-radius: 8px 8px 0 0;
   background: var(--tab); color: var(--tab-ink);
   box-shadow: 0 -1px 0 rgba(255,255,255,.5) inset;
+  flex: 0 0 auto;
+  min-height: 36px;
 }
 .tab.active { filter: brightness(.96); transform: translateY(1px); font-weight: 800; }
 .side-left, .side-right {
   display: flex; flex-direction: column; align-items: center;
   padding-top: 8px; gap: 4px; background: #e9e0d8;
+  min-height: 0; overflow-y: auto;
 }
 .home-btn {
-  width: 18px; height: 22px; border: none; border-radius: 0 6px 6px 0;
-  background: var(--tab); cursor: pointer; color: var(--tab-ink); font-size: 11px;
+  width: 28px; height: 32px; border: none; border-radius: 0 6px 6px 0;
+  background: var(--tab); cursor: pointer; color: var(--tab-ink); font-size: 14px;
 }
 .mtab {
   writing-mode: vertical-rl; transform: rotate(180deg);
   border: none; cursor: pointer;
   font-size: 8px; font-weight: 800; letter-spacing: .12em;
-  padding: 8px 3px; border-radius: 6px 0 0 6px;
-  background: var(--tab); color: var(--tab-ink); width: 28px;
+  padding: 10px 4px; border-radius: 6px 0 0 6px;
+  background: var(--tab); color: var(--tab-ink); width: 32px;
 }
 .mtab.year { background: #2a2624; color: #f8c9d3; }
 .mtab.active { width: 34px; filter: brightness(.93); }
@@ -122,6 +148,8 @@ input.plain, textarea.plain { resize: none; }
 }
 .page {
   overflow: auto; padding: 16px 18px 14px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   background:
     linear-gradient(90deg, rgba(0,0,0,.03), transparent 18px),
     var(--paper);
@@ -281,9 +309,9 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
   width: 48px; height: 58px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 9px;
 }
 .toast {
-  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-  background: #2a2624; color: #fff; padding: 8px 14px; border-radius: 999px; font-size: 12px;
-  opacity: 0; pointer-events: none; transition: opacity .2s;
+  position: fixed; bottom: max(18px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  background: #2a2624; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13px;
+  opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 90;
 }
 .toast.show { opacity: 1; }
 .page.fill { display: flex; flex-direction: column; overflow: hidden; }
@@ -307,10 +335,12 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
   align-content: flex-start; gap: 6px; min-height: 48px;
 }
 .sticky {
-  width: 86px; min-height: 86px; padding: 10px 8px 8px;
-  font-size: 10.5px; line-height: 1.25; cursor: grab;
+  width: 104px; min-height: 104px; padding: 28px 8px 8px;
+  font-size: 12px; line-height: 1.25; cursor: grab;
   box-shadow: 2px 3px 6px rgba(40,20,20,.12);
   position: relative; border: none; text-align: left;
+  -webkit-user-select: none; user-select: none;
+  touch-action: none;
 }
 .sticky:nth-child(odd) { transform: rotate(-1.4deg); }
 .sticky:nth-child(even) { transform: rotate(1.1deg); }
@@ -318,23 +348,46 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
 .sticky.g { background: #c8e86a; }
 .sticky.o { background: #ff9f43; color: #3a2412; }
 .sticky.b { background: #7ec8e3; }
-.sticky .ce { min-height: 52px; font-size: 10.5px; }
-.sticky .x {
-  position: absolute; top: 2px; right: 4px; border: none; background: none;
-  cursor: pointer; font-size: 11px; opacity: .35; line-height: 1;
+.sticky .ce {
+  min-height: 56px; font-size: 13px;
+  touch-action: auto; -webkit-user-select: text; user-select: text;
+  cursor: text;
 }
-.sticky .x:hover { opacity: .8; }
-.pad-tools { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+.sticky .x, .grip {
+  position: absolute; top: 2px; border: none; background: none;
+  cursor: pointer; font-size: 16px; opacity: .45; line-height: 1;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  touch-action: none;
+}
+.sticky .x { right: 0; }
+.grip { left: 0; cursor: grab; font-size: 14px; letter-spacing: -2px; }
+.sticky .x:hover, .grip:hover { opacity: .85; }
+.sticky.dragging { opacity: .3; }
+.sticky.picked { outline: 3px solid #2a2624; outline-offset: 1px; z-index: 2; }
+.sticky-ghost {
+  position: fixed; z-index: 200; pointer-events: none; margin: 0;
+  transform: rotate(5deg) scale(1.06);
+  box-shadow: 6px 10px 20px rgba(0,0,0,.28);
+}
+.lane.drop-hint { background: #fff4ef; }
+.pad-tools { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; align-items: center; }
 .swatch {
-  width: 16px; height: 16px; border: 1px solid rgba(0,0,0,.15); cursor: pointer; border-radius: 2px;
+  width: 28px; height: 28px; border: 1px solid rgba(0,0,0,.15); cursor: pointer; border-radius: 4px;
 }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 1px; }
-@media (max-width: 900px) {
-  body { overflow: auto; }
-  .device { height: auto; min-height: calc(100vh - 48px); border-radius: 0; padding: 8px; width: 100%; }
-  .spread { grid-template-columns: 1fr; }
-  .spine, .side-left { display: none; }
-  .page { min-height: 70vh; }
+.pad-tools .add-row { min-height: 36px; font-size: 13px; padding: 6px 10px; }
+@media (min-width: 1200px) and (min-height: 920px) {
+  .device { height: min(860px, 100%); }
+}
+@media (max-width: 960px) {
+  .device { border-radius: 16px; padding: 8px; }
+  .spread { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) minmax(0,1fr); }
+  .spine { display: none; }
+  .planner { grid-template-columns: 32px 1fr 36px; }
+  .top-tabs { padding: 6px 8px 0; justify-content: flex-start; }
+  .page { min-height: 0; }
+  .board-grid { gap: 6px; }
+  .lane-hint { display: none; }
 }
 </style>
 </head>
@@ -343,6 +396,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
   <div class="chrome">
     <div><strong>Drea Planner</strong> · 2026</div>
     <div class="tools">
+      <button type="button" data-nav="index">Index</button>
       <button type="button" data-nav="today">Heute</button>
       <button type="button" data-nav="board">Board</button>
       <button type="button" data-nav="settings">Farben</button>
@@ -395,6 +449,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
 
   let nav = { view: "cover", month: Number(todayStr.slice(5,7)), date: todayStr, n: 1, paper: "lined" };
   let data = load();
+  let boardPicked = null;
 
   function iso(d) {
     const x = d instanceof Date ? d : new Date(d);
@@ -884,7 +939,8 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     if (!data.board.color) data.board.color = "y";
   }
   function boardNoteHtml(n) {
-    return `<article class="sticky ${n.color || "y"}" draggable="true" data-note-id="${n.id}">
+    return `<article class="sticky ${n.color || "y"}" data-note-id="${n.id}">
+      <button type="button" class="grip" aria-label="Zettel verschieben">⠿</button>
       <button type="button" class="x" data-board-del="${n.id}" title="Entfernen">×</button>
       <div class="ce" contenteditable="true" data-note-text="${n.id}" data-ph="…">${esc(n.text)}</div>
     </article>`;
@@ -923,10 +979,10 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     ];
     return {
       left: `<h2 class="pg-title">Canvas Board</h2>
-        <p class="board-kicker">Kurz erklärt. So funktioniert dein agiles Notizbuch. · Zettel ziehen</p>
+        <p class="board-kicker">Zettel am Raster ziehen — oder antippen, dann ein Feld antippen</p>
         <div class="board-grid">${leftLanes.map(boardLane).join("")}</div>`,
       right: `<h2 class="pg-title">Agiles Notizbuch</h2>
-        <p class="board-kicker">Ideen, Zukunft, Erfolge & Vorrat · Farbe wählen, Zettel anlegen, ziehen</p>
+        <p class="board-kicker">Farbe wählen, + Zettel, dann ins Feld ziehen oder antippen</p>
         <div class="board-grid">${rightLanes.map(boardLane).join("")}</div>`
     };
   }
@@ -1236,31 +1292,93 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
       if (n >= 3) toast("doing: max. 3 aktuelle To-dos — so verzettelst du dich nicht");
     }
     note.lane = lane;
+    boardPicked = null;
     save();
     render();
   }
   function bindBoard() {
     if (nav.view !== "board") return;
+    document.querySelectorAll(".lane").forEach(l => l.classList.toggle("drop-hint", !!boardPicked));
+    if (boardPicked) {
+      const sel = document.querySelector('.sticky[data-note-id="' + boardPicked + '"]');
+      if (sel) sel.classList.add("picked");
+      else boardPicked = null;
+    }
+
+    function laneAt(x, y, ghost) {
+      if (ghost) ghost.style.visibility = "hidden";
+      const under = document.elementFromPoint(x, y);
+      if (ghost) ghost.style.visibility = "visible";
+      return under && under.closest(".lane");
+    }
+    function markLane(lane) {
+      document.querySelectorAll(".lane").forEach(l => l.classList.toggle("over", l === lane));
+    }
+
     document.querySelectorAll(".sticky").forEach(el => {
-      el.addEventListener("dragstart", e => {
-        if (e.target.closest("[contenteditable], .x")) { e.preventDefault(); return; }
-        e.dataTransfer.setData("text/plain", el.dataset.noteId);
-        e.dataTransfer.effectAllowed = "move";
-      });
-      const ce = el.querySelector("[data-note-text]");
-      if (ce) {
-        ce.addEventListener("mousedown", () => { el.draggable = false; });
-        ce.addEventListener("blur", () => { el.draggable = true; });
-      }
-    });
-    document.querySelectorAll(".lane").forEach(lane => {
-      lane.addEventListener("dragover", e => { e.preventDefault(); lane.classList.add("over"); });
-      lane.addEventListener("dragleave", () => lane.classList.remove("over"));
-      lane.addEventListener("drop", e => {
+      const id = el.dataset.noteId;
+      let startX = 0, startY = 0, moved = false, dragging = null;
+
+      function onMove(e) {
+        const x = e.clientX, y = e.clientY;
+        if (!dragging && Math.hypot(x - startX, y - startY) > 8) {
+          const r = el.getBoundingClientRect();
+          const ghost = el.cloneNode(true);
+          ghost.classList.add("sticky-ghost");
+          ghost.style.left = r.left + "px";
+          ghost.style.top = r.top + "px";
+          ghost.style.width = r.width + "px";
+          ghost.style.height = r.height + "px";
+          document.body.appendChild(ghost);
+          el.classList.add("dragging");
+          document.body.classList.add("is-dragging");
+          dragging = { ghost, dx: x - r.left, dy: y - r.top };
+        }
+        if (!dragging) return;
         e.preventDefault();
-        lane.classList.remove("over");
-        const id = e.dataTransfer.getData("text/plain");
-        if (id) moveBoardNote(id, lane.dataset.lane);
+        moved = true;
+        dragging.ghost.style.left = (x - dragging.dx) + "px";
+        dragging.ghost.style.top = (y - dragging.dy) + "px";
+        markLane(laneAt(x, y, dragging.ghost));
+      }
+      function onUp(e) {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
+        document.body.classList.remove("is-dragging");
+        if (dragging) {
+          const lane = laneAt(e.clientX, e.clientY, dragging.ghost);
+          dragging.ghost.remove();
+          el.classList.remove("dragging");
+          markLane(null);
+          dragging = null;
+          if (lane) moveBoardNote(id, lane.dataset.lane);
+          return;
+        }
+        if (!moved) {
+          boardPicked = boardPicked === id ? null : id;
+          document.querySelectorAll(".sticky").forEach(s => s.classList.toggle("picked", s.dataset.noteId === boardPicked));
+          document.querySelectorAll(".lane").forEach(l => l.classList.toggle("drop-hint", !!boardPicked));
+          if (boardPicked) toast("Jetzt ein Feld antippen");
+        }
+      }
+
+      el.addEventListener("pointerdown", e => {
+        if (e.target.closest(".x, [data-note-text]")) return;
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        e.preventDefault();
+        startX = e.clientX; startY = e.clientY; moved = false; dragging = null;
+        window.addEventListener("pointermove", onMove, { passive: false });
+        window.addEventListener("pointerup", onUp);
+        window.addEventListener("pointercancel", onUp);
+      });
+    });
+
+    document.querySelectorAll(".lane").forEach(lane => {
+      lane.addEventListener("click", e => {
+        if (!boardPicked) return;
+        if (e.target.closest(".sticky, [data-board-add], [data-board-color], .x, .grip")) return;
+        moveBoardNote(boardPicked, lane.dataset.lane);
       });
     });
   }
@@ -1314,7 +1432,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
       return;
     }
     const n = e.target.closest("[data-nav]");
-    if (n && !e.target.closest("[data-path], input, textarea, [data-note-text], .sticky")) { go(n.dataset.nav); }
+    if (n && !e.target.closest("[data-path], input, textarea, [data-note-text], .sticky, .grip")) { go(n.dataset.nav); }
   });
 
   document.addEventListener("input", (e) => {
