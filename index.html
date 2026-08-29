@@ -61,7 +61,7 @@ input.plain, textarea.plain { resize: none; }
   position: sticky;
   top: 0;
   z-index: 80;
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  display: flex; flex-direction: column; gap: 4px;
   padding: max(8px, env(safe-area-inset-top)) 16px 8px;
   color: #e8ddd6; font-size: 12px; letter-spacing: .08em;
   background: #1c1a19;
@@ -147,9 +147,10 @@ input.plain, textarea.plain { resize: none; }
   border-radius: 2px 0 0 2px;
 }
 .page {
-  overflow: auto; padding: 16px 18px 14px;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   background:
     linear-gradient(90deg, rgba(0,0,0,.03), transparent 18px),
     var(--paper);
@@ -160,6 +161,22 @@ input.plain, textarea.plain { resize: none; }
     linear-gradient(270deg, rgba(0,0,0,.03), transparent 18px),
     var(--paper-2);
 }
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.ink-stack { position: relative; min-height: 100%; }
+.page-body { position: relative; z-index: 1; padding: 16px 18px 14px; min-height: 100%; }
+.ink-layer {
+  position: absolute; left: 0; top: 0; z-index: 2;
+  pointer-events: none;
+  touch-action: none;
+}
+.page.fill .page-body { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.page.inking .page-scroll { touch-action: none; }
 .spine {
   background: linear-gradient(90deg, #d7ccc6, #eee8e2 40%, #cfc4bc);
   display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
@@ -315,6 +332,14 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
 }
 .toast.show { opacity: 1; }
 .page.fill { display: flex; flex-direction: column; overflow: hidden; }
+.chrome-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.penbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 4px; }
+.penbar button.on, .chrome button.on { background: #3a3330; border-color: var(--pink); color: #fff; }
+.ink-swatch {
+  width: 28px; height: 28px; min-height: 28px; padding: 0; border-radius: 50%;
+  border: 2px solid #5a4f4a;
+}
+.ink-swatch.on { outline: 2px solid #fff; outline-offset: 1px; }
 .board-kicker { font-size: 10px; letter-spacing: .04em; color: var(--muted); margin: -4px 0 8px; }
 .board-grid {
   display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
@@ -394,14 +419,29 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
 <body>
 <div class="app">
   <div class="chrome">
-    <div><strong>Drea Planner</strong> · 2026</div>
-    <div class="tools">
-      <button type="button" data-nav="index">Index</button>
-      <button type="button" data-nav="today">Heute</button>
-      <button type="button" data-nav="board">Board</button>
-      <button type="button" data-nav="settings">Farben</button>
-      <button type="button" id="btnExport">Export</button>
-      <button type="button" id="btnImport">Import</button>
+    <div class="chrome-row">
+      <div><strong>Drea Planner</strong> · 2026</div>
+      <div class="tools">
+        <button type="button" data-nav="index">Index</button>
+        <button type="button" data-nav="today">Heute</button>
+        <button type="button" data-nav="board">Board</button>
+        <button type="button" data-nav="settings">Farben</button>
+        <button type="button" id="btnExport">Export</button>
+        <button type="button" id="btnImport">Import</button>
+      </div>
+    </div>
+    <div class="penbar" id="penbar">
+      <button type="button" class="ink-swatch on" data-ink-color="#2a2624" style="background:#2a2624" title="Schwarz"></button>
+      <button type="button" class="ink-swatch" data-ink-color="#c45c5c" style="background:#c45c5c" title="Rot"></button>
+      <button type="button" class="ink-swatch" data-ink-color="#3d6ea8" style="background:#3d6ea8" title="Blau"></button>
+      <button type="button" class="ink-swatch" data-ink-color="#e59aaa" style="background:#e59aaa" title="Rosa"></button>
+      <button type="button" data-ink-w="1.6">Fein</button>
+      <button type="button" data-ink-w="2.6" class="on">Mittel</button>
+      <button type="button" data-ink-w="5">Stark</button>
+      <button type="button" id="btnErase">Radierer</button>
+      <button type="button" id="btnInkUndo">Rückgängig</button>
+      <button type="button" id="btnInkClear">Leeren</button>
+      <button type="button" id="btnFinger">Finger</button>
     </div>
   </div>
   <div class="stage">
@@ -410,9 +450,23 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
         <div class="top-tabs" id="topTabs"></div>
         <div class="side-left"><button class="home-btn" data-nav="index" title="Index">⌂</button></div>
         <div class="spread">
-          <div class="page" id="left"></div>
+          <div class="page" id="leftPage">
+            <div class="page-scroll">
+              <div class="ink-stack">
+                <div class="page-body" id="left"></div>
+                <canvas class="ink-layer" id="inkLeft"></canvas>
+              </div>
+            </div>
+          </div>
           <div class="spine" id="spine"></div>
-          <div class="page right" id="right"></div>
+          <div class="page right" id="rightPage">
+            <div class="page-scroll">
+              <div class="ink-stack">
+                <div class="page-body" id="right"></div>
+                <canvas class="ink-layer" id="inkRight"></canvas>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="side-right" id="monthTabs"></div>
       </div>
@@ -472,13 +526,19 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     save();
   }
   function load() {
-    try { return Object.assign(defaults(), JSON.parse(localStorage.getItem(KEY) || "null") || {}); }
+    try {
+      const raw = Object.assign(defaults(), JSON.parse(localStorage.getItem(KEY) || "null") || {});
+      raw.settings = Object.assign({ theme: "rosa", owner: "", pen: { color: "#2a2624", width: 2.6, erase: false, finger: false } }, raw.settings || {});
+      raw.settings.pen = Object.assign({ color: "#2a2624", width: 2.6, erase: false, finger: false }, raw.settings.pen || {});
+      if (!raw.ink) raw.ink = {};
+      return raw;
+    }
     catch (e) { return defaults(); }
   }
   function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
   function defaults() {
     return {
-      settings: { theme: "rosa", owner: "" },
+      settings: { theme: "rosa", owner: "", pen: { color: "#2a2624", width: 2.6, erase: false, finger: false } },
       daily: {}, weekly: {}, monthly: {}, cal: {},
       finance: {}, savings: { for: "", goal: "", until: "", motivation: "", entries: [] },
       subs: [],
@@ -502,7 +562,8 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
       stickers: [],
       braindump: "", inbox: "", shortlist: "", tagesablauf: "",
       reviews: {}, yearplan: "", yearfin: "", yearphotos: "",
-      board: { color: "y", notes: [] }
+      board: { color: "y", notes: [] },
+      ink: {}
     };
   }
   function toast(msg) {
@@ -1115,6 +1176,8 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
         <p style="color:var(--muted);font-size:11px;margin-top:8px">Rosa, Grau, Violett oder Blau — wie im Originalplaner.</p>
         <div class="hdr">Daten</div>
         <p style="font-size:12px;line-height:1.5">Alles bleibt lokal in diesem Browser. Export speichert eine JSON-Datei. Import stellt sie wieder her.</p>
+        <div class="hdr">Apple Pencil</div>
+        <p style="font-size:12px;line-height:1.5">Auf dem iPad schreibt der Stift direkt auf die Seite. Finger tippt und zieht weiter. „Finger“ in der Leiste erlaubt Schreiben ohne Pencil.</p>
         <button class="btn-open" id="wipe" style="background:#a05050">Alles löschen</button>`,
       right: `<div class="hdr">Inhalt</div>
         ${TOP.map(([id,l]) => `<span class="linkish" data-nav="${id}">${l}</span>`).join("")}
@@ -1248,6 +1311,152 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     return { left: indexLeft(), right: indexRight() };
   }
 
+  const inkSides = {
+    left: { page: null, scroll: null, canvas: null, ctx: null },
+    right: { page: null, scroll: null, canvas: null, ctx: null }
+  };
+  let inkStroke = null;
+  let lastInkSide = "left";
+
+  function inkKey(side) {
+    return [nav.view, nav.date || "", nav.month || "", nav.n || "", nav.paper || "", side].join(":");
+  }
+  function inkStrokes(side) {
+    if (!data.ink) data.ink = {};
+    const k = inkKey(side);
+    if (!Array.isArray(data.ink[k])) data.ink[k] = [];
+    return data.ink[k];
+  }
+  function inkAccept(e) {
+    if (e.pointerType === "pen") return true;
+    if (data.settings.pen.finger && (e.pointerType === "mouse" || e.pointerType === "touch")) return true;
+    return false;
+  }
+  function inkPoint(scroll, e) {
+    const r = scroll.getBoundingClientRect();
+    return {
+      x: e.clientX - r.left + scroll.scrollLeft,
+      y: e.clientY - r.top + scroll.scrollTop,
+      p: e.pressure > 0 ? e.pressure : 0.5
+    };
+  }
+  function drawStroke(ctx, s) {
+    const pts = s.points;
+    if (!pts || !pts.length) return;
+    ctx.save();
+    ctx.globalCompositeOperation = s.erase ? "destination-out" : "source-over";
+    ctx.strokeStyle = s.erase ? "#000" : s.color;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    if (pts.length === 1) {
+      ctx.beginPath();
+      ctx.arc(pts[0].x, pts[0].y, (s.width * (0.4 + (pts[0].p || 0.5))) / 2, 0, Math.PI * 2);
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+    for (let i = 1; i < pts.length; i++) {
+      ctx.beginPath();
+      ctx.moveTo(pts[i - 1].x, pts[i - 1].y);
+      ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.lineWidth = s.width * (0.45 + (pts[i].p || 0.5));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function sizeInkSide(side) {
+    const slot = inkSides[side];
+    const page = slot.page;
+    const canvas = slot.canvas;
+    const scroll = page.querySelector(".page-scroll");
+    const stack = page.querySelector(".ink-stack");
+    slot.scroll = scroll;
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(scroll.clientWidth, stack.clientWidth, 1);
+    const h = Math.max(scroll.scrollHeight, stack.scrollHeight, scroll.clientHeight, 1);
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    slot.ctx = ctx;
+    inkStrokes(side).forEach(s => drawStroke(ctx, s));
+  }
+  function syncInk() {
+    sizeInkSide("left");
+    sizeInkSide("right");
+  }
+  function syncPenbar() {
+    const p = data.settings.pen;
+    document.querySelectorAll("[data-ink-color]").forEach(b => b.classList.toggle("on", b.dataset.inkColor === p.color && !p.erase));
+    document.querySelectorAll("[data-ink-w]").forEach(b => b.classList.toggle("on", Number(b.dataset.inkW) === p.width));
+    document.getElementById("btnErase").classList.toggle("on", !!p.erase);
+    document.getElementById("btnFinger").classList.toggle("on", !!p.finger);
+  }
+  function bindInkLayers() {
+    inkSides.left.page = document.getElementById("leftPage");
+    inkSides.left.canvas = document.getElementById("inkLeft");
+    inkSides.right.page = document.getElementById("rightPage");
+    inkSides.right.canvas = document.getElementById("inkRight");
+
+    function onDown(e, side) {
+      if (!inkAccept(e)) return;
+      if (e.target.closest(".chrome, .tab, .mtab, .home-btn")) return;
+      e.preventDefault();
+      lastInkSide = side;
+      inkSides[side].page.classList.add("inking");
+      const p = data.settings.pen;
+      inkStroke = {
+        side,
+        color: p.color,
+        width: p.erase ? Math.max(10, p.width * 4) : p.width,
+        erase: !!p.erase,
+        points: [inkPoint(inkSides[side].scroll, e)]
+      };
+      drawStroke(inkSides[side].ctx, inkStroke);
+      try { inkSides[side].page.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    function onMove(e) {
+      if (!inkStroke || !inkAccept(e)) {
+        if (inkStroke && e.pointerType === "touch") e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      const slot = inkSides[inkStroke.side];
+      const pt = inkPoint(slot.scroll, e);
+      const last = inkStroke.points[inkStroke.points.length - 1];
+      if (Math.hypot(pt.x - last.x, pt.y - last.y) < 1.2) return;
+      inkStroke.points.push(pt);
+      drawStroke(slot.ctx, { color: inkStroke.color, width: inkStroke.width, erase: inkStroke.erase, points: [last, pt] });
+    }
+    function onUp() {
+      if (!inkStroke) return;
+      const side = inkStroke.side;
+      inkSides[side].page.classList.remove("inking");
+      if (inkStroke.points.length) {
+        inkStrokes(side).push({
+          color: inkStroke.color,
+          width: inkStroke.width,
+          erase: inkStroke.erase,
+          points: inkStroke.points
+        });
+        save();
+      }
+      inkStroke = null;
+    }
+
+    ["left", "right"].forEach(side => {
+      const page = inkSides[side].page;
+      page.addEventListener("pointerdown", e => onDown(e, side), { passive: false });
+    });
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("resize", () => syncInk());
+  }
+
   function render() {
     applyTheme();
     renderChrome();
@@ -1256,7 +1465,11 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     document.getElementById("right").innerHTML = p.right;
     document.getElementById("left").classList.toggle("fill", nav.view === "board");
     document.getElementById("right").classList.toggle("fill", nav.view === "board");
+    document.getElementById("leftPage").classList.toggle("fill", nav.view === "board");
+    document.getElementById("rightPage").classList.toggle("fill", nav.view === "board");
     bindDynamic();
+    syncInk();
+    syncPenbar();
   }
 
   function bindDynamic() {
@@ -1364,6 +1577,7 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
       }
 
       el.addEventListener("pointerdown", e => {
+        if (e.pointerType === "pen") return;
         if (e.target.closest(".x, [data-note-text]")) return;
         if (e.pointerType === "mouse" && e.button !== 0) return;
         e.preventDefault();
@@ -1457,6 +1671,43 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
     }
   });
 
+  document.getElementById("penbar").addEventListener("click", (e) => {
+    const color = e.target.closest("[data-ink-color]");
+    if (color) {
+      data.settings.pen.color = color.dataset.inkColor;
+      data.settings.pen.erase = false;
+      save(); syncPenbar(); return;
+    }
+    const w = e.target.closest("[data-ink-w]");
+    if (w) {
+      data.settings.pen.width = Number(w.dataset.inkW);
+      save(); syncPenbar(); return;
+    }
+  });
+  document.getElementById("btnErase").onclick = () => {
+    data.settings.pen.erase = !data.settings.pen.erase;
+    save(); syncPenbar();
+    toast(data.settings.pen.erase ? "Radierer an" : "Stift an");
+  };
+  document.getElementById("btnFinger").onclick = () => {
+    data.settings.pen.finger = !data.settings.pen.finger;
+    save(); syncPenbar();
+    toast(data.settings.pen.finger ? "Finger/Maus schreibt auch" : "Nur Pencil schreibt");
+  };
+  document.getElementById("btnInkUndo").onclick = () => {
+    let strokes = inkStrokes(lastInkSide);
+    if (!strokes.length) lastInkSide = lastInkSide === "left" ? "right" : "left";
+    strokes = inkStrokes(lastInkSide);
+    strokes.pop();
+    save(); syncInk();
+  };
+  document.getElementById("btnInkClear").onclick = () => {
+    if (!confirm("Handschrift auf diesen beiden Seiten löschen?")) return;
+    data.ink[inkKey("left")] = [];
+    data.ink[inkKey("right")] = [];
+    save(); syncInk();
+  };
+
   document.getElementById("btnExport").onclick = () => {
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const a = document.createElement("a");
@@ -1469,10 +1720,17 @@ table.data th { font-size: 9px; letter-spacing: .1em; color: var(--muted); }
   document.getElementById("importFile").onchange = (e) => {
     const f = e.target.files[0]; if (!f) return;
     const r = new FileReader();
-    r.onload = () => { try { data = Object.assign(defaults(), JSON.parse(r.result)); save(); render(); toast("Importiert"); } catch(err){ toast("Ungültige Datei"); } };
+    r.onload = () => { try {
+      data = Object.assign(defaults(), JSON.parse(r.result));
+      data.settings = Object.assign(defaults().settings, data.settings || {});
+      data.settings.pen = Object.assign(defaults().settings.pen, data.settings.pen || {});
+      if (!data.ink) data.ink = {};
+      save(); render(); toast("Importiert");
+    } catch(err){ toast("Ungültige Datei"); } };
     r.readAsText(f);
   };
 
+  bindInkLayers();
   applyTheme();
   if (location.hash.length > 1) go(decodeURIComponent(location.hash.slice(1)));
   else render();
